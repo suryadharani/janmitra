@@ -2,54 +2,259 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JanMitra — A personal space for meaningful connections</title>
-    <meta name="description" content="JanMitra — A personal space for meaningful connections.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JanMitra — Remembering the people who matter</title>
+    <meta name="description" content="JanMitra — A private personal space for remembering important people and meaningful meetings.">
     
     <!-- Open Graph & Social Metadata -->
     <meta property="og:title" content="JanMitra">
-    <meta property="og:description" content="A personal space for meaningful connections.">
+    <meta property="og:description" content="Remembering the people who matter.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://janmitra.is-cool.dev">
     
-    <!-- Fonts -->
+    <!-- Fonts: Outfit (Headings) & Plus Jakarta Sans (Body & Inputs) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="ambient-glow bg-glow-1"></div>
-    <div class="ambient-glow bg-glow-2"></div>
+    <!-- Divine Lord Shiva Atmospheric Background Canvas -->
+    <canvas id="shiva-canvas"></canvas>
 
-    <main class="landing-container">
-        <header class="brand-header">
-            <div class="brand-badge">
-                <span class="badge-dot"></span>
-                <span class="badge-text">Preview</span>
-            </div>
-            <h1 class="brand-title">JanMitra</h1>
-            <p class="brand-tagline">A personal space for meaningful connections.</p>
-        </header>
+    <!-- App Container -->
+    <div id="app-viewport">
 
-        <section class="dignified-card">
-            <div class="card-inner">
-                <div class="symbol-mark" aria-hidden="true">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <path d="M12 8v8"></path>
-                        <path d="M8 12h8"></path>
-                    </svg>
-                </div>
-                <p class="card-quote">Designed with simplicity, quiet clarity, and purpose.</p>
-            </div>
+        <!-- 1. PRIVATE LOGIN EXPERIENCE -->
+        <section id="login-screen" class="view-screen">
+            <main class="login-panel">
+                <header class="spiritual-brand-header">
+                    <div class="divine-aura-mark" aria-hidden="true">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v10"></path>
+                            <path d="M7 12h10"></path>
+                        </svg>
+                    </div>
+                    <h1 class="login-brand-title">JANMITRA</h1>
+                    <p class="login-brand-tagline">Remembering the people who matter.</p>
+                </header>
+
+                <form id="login-form" class="auth-form" autocomplete="off">
+                    <div class="input-field-group">
+                        <label for="username-input" class="field-label">Username</label>
+                        <input 
+                            type="text" 
+                            id="username-input" 
+                            class="auth-input" 
+                            value="janmitra" 
+                            placeholder="Enter username" 
+                            required 
+                            autocapitalize="off"
+                        >
+                    </div>
+
+                    <div class="input-field-group">
+                        <label for="password-input" class="field-label">Password</label>
+                        <input 
+                            type="password" 
+                            id="password-input" 
+                            class="auth-input" 
+                            placeholder="••••••••" 
+                            required
+                        >
+                    </div>
+
+                    <div id="auth-error" class="auth-error-message" role="alert"></div>
+
+                    <button type="submit" id="login-btn" class="btn-primary-divine">
+                        <span>LOGIN</span>
+                    </button>
+
+                    <div class="auth-footer-links">
+                        <button type="button" id="forgot-password-btn" class="btn-link-forgot">Forgot Password?</button>
+                    </div>
+                </form>
+            </main>
         </section>
 
-        <footer class="landing-footer">
-            <p class="footer-text">&copy; JanMitra. All rights reserved.</p>
-        </footer>
-    </main>
+        <!-- FORGOT PASSWORD RECOVERY MODAL -->
+        <div id="forgot-modal" class="app-modal" role="dialog" aria-modal="true">
+            <div class="modal-glass-card">
+                <button type="button" id="close-forgot-modal" class="modal-close-trigger" aria-label="Close">&times;</button>
+                <div class="modal-header">
+                    <h3 class="modal-title">Password Recovery</h3>
+                    <p class="modal-subtitle">
+                        Send a secure Firebase password-reset link to the authorized account email associated with <strong>janmitra</strong>.
+                    </p>
+                </div>
+                <div class="modal-body">
+                    <p class="recovery-email-info">
+                        Recovery Address: <code>srigiribhuvaneshwaridevi@gmail.com</code>
+                    </p>
+                    <div id="forgot-status" class="modal-status-area"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="send-reset-btn" class="btn-primary-divine">
+                        Send Password Reset Link
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 2. PROTECTED APPLICATION DASHBOARD -->
+        <section id="app-dashboard" class="view-screen" style="display: none;">
+            <header class="dashboard-navbar">
+                <div class="nav-brand-group">
+                    <h2 class="nav-title">JanMitra</h2>
+                    <span class="nav-subtitle">Private Personal Record</span>
+                </div>
+                <div class="nav-user-actions">
+                    <span class="user-badge">
+                        <span class="user-dot"></span>
+                        <span id="current-user-display">janmitra</span>
+                    </span>
+                    <button type="button" id="sign-out-btn" class="btn-sign-out">
+                        🔒 Sign Out
+                    </button>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+                <section class="welcome-banner">
+                    <h3 class="welcome-greeting">Om Namah Shivaya</h3>
+                    <p class="welcome-text">Preserving sacred memories and meaningful personal connections.</p>
+                </section>
+
+                <!-- Primary Core Actions Grid -->
+                <section class="actions-grid">
+                    <button type="button" id="action-add-person" class="action-card card-add">
+                        <div class="action-icon">➕</div>
+                        <div class="action-info">
+                            <h4 class="action-title">ADD PERSON</h4>
+                            <p class="action-desc">Record a new meaningful person and context</p>
+                        </div>
+                    </button>
+
+                    <button type="button" id="action-find-people" class="action-card card-find">
+                        <div class="action-icon">🔎</div>
+                        <div class="action-info">
+                            <h4 class="action-title">FIND PEOPLE</h4>
+                            <p class="action-desc">Search recorded individuals by origin or name</p>
+                        </div>
+                    </button>
+                </section>
+
+                <!-- Person-Centric Records Preview Section -->
+                <section class="records-preview-section">
+                    <div class="section-header">
+                        <h4 class="section-title">Recorded People</h4>
+                        <span class="section-count">Person-Centric Model</span>
+                    </div>
+
+                    <div id="recent-records-container" class="records-list">
+                        <!-- Dynamic Records rendered by firebase-auth.js -->
+                    </div>
+                </section>
+            </main>
+        </section>
+
+
+        <!-- ADD PERSON MODAL -->
+        <div id="add-person-modal" class="app-modal" role="dialog" aria-modal="true">
+            <div class="modal-glass-card modal-wide">
+                <button type="button" class="modal-close-trigger" aria-label="Close">&times;</button>
+                <div class="modal-header">
+                    <h3 class="modal-title">Add Person</h3>
+                    <p class="modal-subtitle">Record a person's details and origin location.</p>
+                </div>
+                <form id="add-person-form" class="modal-form">
+                    <div class="form-grid-2">
+                        <div class="input-field-group">
+                            <label class="field-label">Full Name</label>
+                            <input type="text" class="auth-input" placeholder="e.g. Sri Ananda Sharma" required>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">Contact Details</label>
+                            <input type="text" class="auth-input" placeholder="Phone or email">
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">Meeting Date</label>
+                            <input type="date" class="auth-input">
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">Category Tags</label>
+                            <input type="text" class="auth-input" placeholder="e.g. Devotee, Scholar, Yogi">
+                        </div>
+                    </div>
+
+                    <div class="location-group-box">
+                        <h5 class="box-label">Person's Origin / Association Location</h5>
+                        <div class="form-grid-3">
+                            <div class="input-field-group">
+                                <label class="field-label">State</label>
+                                <input type="text" class="auth-input" placeholder="e.g. Andhra Pradesh">
+                            </div>
+                            <div class="input-field-group">
+                                <label class="field-label">District</label>
+                                <input type="text" class="auth-input" placeholder="e.g. Guntur">
+                            </div>
+                            <div class="input-field-group">
+                                <label class="field-label">City / Town</label>
+                                <input type="text" class="auth-input" placeholder="e.g. Tenali">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="field-label">Context & Significance of Meeting</label>
+                        <textarea class="auth-input auth-textarea" rows="3" placeholder="Context of how you met..."></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn-primary-divine">Save Person Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- FIND PEOPLE MODAL -->
+        <div id="find-people-modal" class="app-modal" role="dialog" aria-modal="true">
+            <div class="modal-glass-card modal-wide">
+                <button type="button" class="modal-close-trigger" aria-label="Close">&times;</button>
+                <div class="modal-header">
+                    <h3 class="modal-title">Find People</h3>
+                    <p class="modal-subtitle">Search by person's name, origin city, or category.</p>
+                </div>
+                <div class="modal-body">
+                    <div class="input-field-group">
+                        <input type="search" id="search-person-input" class="auth-input" placeholder="🔍 Type name or city (e.g. Tenali)...">
+                    </div>
+                    <div id="search-results-list" class="search-results-container">
+                        <!-- Search results rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Application Script Module -->
+    <script type="module">
+        import { ShivaCanvas } from './js/shiva-canvas.js';
+        import './js/firebase-auth.js';
+
+        // Initialize Canvas
+        document.addEventListener('DOMContentLoaded', () => {
+            new ShivaCanvas('shiva-canvas');
+        });
+    </script>
 </body>
 </html>
