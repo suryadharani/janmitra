@@ -41,14 +41,23 @@ JanMitra prioritizes **Person** as the core entity:
 
 ---
 
+## 🖼️ Person Photograph & Expanded Person View (Phase 3.3)
+
+- **Static City/Town Reference Dataset**: Built-in static reference cities mapped by State and District (e.g., Andhra Pradesh $\rightarrow$ NTR $\rightarrow$ Vijayawada) providing suggestions on fresh databases without external API calls while preserving full manual entry capabilities.
+- **Client-Side Compressed Photographs**: Photo upload control with client-side `<canvas>` image compression (JPEG/WebP Data URLs, max $360 \times 360$ px, $\sim 15-30\text{ KB}$) keeping stored photos safely within Firestore document limits without external storage buckets or exposed URLs. Fallback to initials avatar when no photo exists.
+- **Expanded Person View**: Clicking any person card (or search result) opens a comprehensive full-screen glassmorphism modal presenting all recorded details (photo, full name, contact, date, categories, location, context, notes) with direct action buttons (`Edit Person`, `Delete Person`, `Close`). Card overflow menu `⋮` remains strictly isolated for quick menu actions.
+
+---
+
 ## 🚀 Development Status
 
 - **Phase 1**: Initial domain setup and responsive preview page.
 - **Phase 2**: Private Firebase Authentication system with `janmitra` username mapping and Lord Shiva divine background.
 - **Phase 3**: Connected to production Firebase project (`janmitra-598fe`), single-user security policy, and production data mode.
 - **Phase 3.1**: Multi-category support, person-centric terminology, and structured filtering.
-- **Phase 3.2**:
-  - Integrated India LGD master geography dataset (28 States, 8 UTs, 780+ Districts).
-  - Cascading State $\rightarrow$ District $\rightarrow$ City/Town selector with custom manual entry.
-  - Person editing (`updateDoc`) and deletion with confirmation (`deleteDoc`) via card menu `⋮`.
-  - Multi-category OR filter combined with cascading location AND filters in Find People view.
+- **Phase 3.2**: Integrated India LGD master geography (28 States, 8 UTs, 780+ Districts), cascading location selectors, person editing/deletion, and combined filters.
+- **Phase 3.3**:
+  - Built-in static city reference dataset (e.g., AP $\rightarrow$ NTR $\rightarrow$ Vijayawada) for instant suggestions on fresh databases.
+  - Person Photograph upload with client-side image compression and preview/replace/remove options.
+  - Expanded Person View modal displaying complete person details, photograph, and integrated actions.
+

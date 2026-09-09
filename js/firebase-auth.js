@@ -20,12 +20,52 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 import { firebaseConfig, USERNAME_MAP, DEFAULT_RECOVERY_EMAIL, CATEGORIES } from './firebase-config.js';
-import { INDIA_GEOGRAPHY, getStatesList, getDistrictsForState } from './india-geography.js';
+import { INDIA_GEOGRAPHY, getStatesList, getDistrictsForState, getCitiesForDistrict } from './india-geography.js';
 
 // Initialize Firebase Production Services
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Client-Side Image Compression Helper (Max 360x360, Quality 0.75)
+function compressImage(file, maxWidth = 360, maxHeight = 360, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Export as compressed JPEG Base64 DataURL (~15-30 KB)
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve(dataUrl);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+}
 
 // Global Auth & Person Controller Class
 export class JanMitraApp {
@@ -34,6 +74,8 @@ export class JanMitraApp {
         this.records = []; // Production Firestore records array
         this.editingPersonId = null;
         this.deletingPersonId = null;
+        this.expandedPersonId = null;
+        this.selectedPhotoBase64 = ''; // Holds current Base64 image string
 
         this.initUI();
         this.initListeners();
@@ -61,10 +103,18 @@ export class JanMitraApp {
         // Modal Views for Dashboard Actions
         this.addPersonModal = document.getElementById('add-person-modal');
         this.findPeopleModal = document.getElementById('find-people-modal');
+        this.expandedPersonModal = document.getElementById('expanded-person-modal');
         this.deleteConfirmModal = document.getElementById('delete-confirm-modal');
         this.addPersonForm = document.getElementById('add-person-form');
         this.formModalTitle = document.getElementById('person-form-modal-title');
         this.submitPersonBtn = document.getElementById('save-person-submit-btn');
+
+        // Photo Upload Elements
+        this.photoInput = document.getElementById('person-photo-input');
+        this.selectPhotoBtn = document.getElementById('select-photo-btn');
+        this.removePhotoBtn = document.getElementById('remove-photo-btn');
+        this.photoPreviewImg = document.getElementById('person-photo-img');
+        this.photoPlaceholderText = document.getElementById('photo-placeholder-text');
 
         // Add/Edit Location Elements
         this.personStateSelect = document.getElementById('person-state-input');
@@ -80,6 +130,10 @@ export class JanMitraApp {
         // Delete Confirm Controls
         this.cancelDeleteBtn = document.getElementById('cancel-delete-btn');
         this.confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+        // Expanded View Actions
+        this.expandedEditBtn = document.getElementById('expanded-edit-btn');
+        this.expandedDeleteBtn = document.getElementById('expanded-delete-btn');
     }
 
     initListeners() {
@@ -119,6 +173,16 @@ export class JanMitraApp {
 
         if (this.sendResetBtn) {
             this.sendResetBtn.addEventListener('click', () => this.handleSendPasswordReset());
+        }
+
+        // Photo Upload Controls
+        if (this.selectPhotoBtn && this.photoInput) {
+            this.selectPhotoBtn.addEventListener('click', () => this.photoInput.click());
+            this.photoInput.addEventListener('change', (e) => this.handlePhotoSelected(e));
+        }
+
+        if (this.removePhotoBtn) {
+            this.removePhotoBtn.addEventListener('click', () => this.clearSelectedPhoto());
         }
 
         // Dashboard Primary Action Buttons
@@ -181,6 +245,27 @@ export class JanMitraApp {
             this.filterCitySelect.addEventListener('change', applyFilters);
         }
 
+        // Expanded View Action Buttons
+        if (this.expandedEditBtn) {
+            this.expandedEditBtn.addEventListener('click', () => {
+                if (this.expandedPersonId) {
+                    const id = this.expandedPersonId;
+                    this.closeExpandedModal();
+                    this.openEditPersonModal(id);
+                }
+            });
+        }
+
+        if (this.expandedDeleteBtn) {
+            this.expandedDeleteBtn.addEventListener('click', () => {
+                if (this.expandedPersonId) {
+                    const id = this.expandedPersonId;
+                    this.closeExpandedModal();
+                    this.confirmDeletePerson(id);
+                }
+            });
+        }
+
         // Delete Confirmation Modal Listeners
         if (this.cancelDeleteBtn) {
             this.cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
@@ -190,7 +275,7 @@ export class JanMitraApp {
             this.confirmDeleteBtn.addEventListener('click', () => this.executeDeletePerson());
         }
 
-        // Modal Close Buttons
+        // Modal Close Triggers
         document.querySelectorAll('.modal-close-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.app-modal');
@@ -209,6 +294,45 @@ export class JanMitraApp {
                 document.querySelectorAll('.card-dropdown-menu.active').forEach(m => m.classList.remove('active'));
             }
         });
+    }
+
+    // Handle Image Selection and Client-Side Compression
+    async handlePhotoSelected(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const compressedDataUrl = await compressImage(file, 360, 360, 0.75);
+            this.setPhotoPreview(compressedDataUrl);
+        } catch (err) {
+            console.error("Image compression failed:", err);
+            alert("Unable to process selected image.");
+        }
+    }
+
+    setPhotoPreview(dataUrl) {
+        this.selectedPhotoBase64 = dataUrl || '';
+        if (dataUrl) {
+            if (this.photoPreviewImg) {
+                this.photoPreviewImg.src = dataUrl;
+                this.photoPreviewImg.style.display = 'block';
+            }
+            if (this.photoPlaceholderText) this.photoPlaceholderText.style.display = 'none';
+            if (this.removePhotoBtn) this.removePhotoBtn.style.display = 'inline-block';
+        } else {
+            this.clearSelectedPhoto();
+        }
+    }
+
+    clearSelectedPhoto() {
+        this.selectedPhotoBase64 = '';
+        if (this.photoInput) this.photoInput.value = '';
+        if (this.photoPreviewImg) {
+            this.photoPreviewImg.src = '';
+            this.photoPreviewImg.style.display = 'none';
+        }
+        if (this.photoPlaceholderText) this.photoPlaceholderText.style.display = 'block';
+        if (this.removePhotoBtn) this.removePhotoBtn.style.display = 'none';
     }
 
     // Populate Master Geography (States/UTs)
@@ -245,8 +369,9 @@ export class JanMitraApp {
         this.personCityInput.disabled = true;
     }
 
-    // Add/Edit Form District Cascade
+    // Add/Edit Form District Cascade (Combines Static Geography Reference + Firestore Recorded Cities)
     onFormDistrictChanged(selectedDistrict) {
+        const selectedState = this.personStateSelect.value;
         if (!selectedDistrict) {
             this.personCityInput.disabled = true;
             return;
@@ -254,16 +379,20 @@ export class JanMitraApp {
 
         this.personCityInput.disabled = false;
         
-        // Populate known recorded cities datalist for this district
-        const knownCities = Array.from(new Set(
-            this.records
-                .filter(r => r.state === this.personStateSelect.value && r.district === selectedDistrict && r.city)
-                .map(r => r.city)
-        )).sort();
+        // 1. Static City Reference Suggestions from LGD Data
+        const staticCities = getCitiesForDistrict(selectedState, selectedDistrict);
+
+        // 2. Existing Recorded Cities from Firestore
+        const recordedCities = this.records
+            .filter(r => r.state === selectedState && r.district === selectedDistrict && r.city)
+            .map(r => r.city);
+
+        // Combined Unique Cities List
+        const allCitySuggestions = Array.from(new Set([...staticCities, ...recordedCities])).sort();
 
         const datalist = document.getElementById('known-cities-list');
         if (datalist) {
-            datalist.innerHTML = knownCities.map(c => `<option value="${this.escapeHTML(c)}"></option>`).join('');
+            datalist.innerHTML = allCitySuggestions.map(c => `<option value="${this.escapeHTML(c)}"></option>`).join('');
         }
     }
 
@@ -286,7 +415,7 @@ export class JanMitraApp {
         this.filterCitySelect.disabled = true;
     }
 
-    // Filter Modal District Cascade
+    // Filter Modal District Cascade (Combines Static LGD Cities + Recorded Firestore Cities)
     onFilterDistrictChanged(selectedDistrict) {
         const selectedState = this.filterStateSelect?.value;
         if (!selectedDistrict) {
@@ -295,11 +424,12 @@ export class JanMitraApp {
             return;
         }
 
-        const cities = Array.from(new Set(
-            this.records
-                .filter(r => (!selectedState || r.state === selectedState) && r.district === selectedDistrict && r.city)
-                .map(r => r.city)
-        )).sort();
+        const staticCities = getCitiesForDistrict(selectedState, selectedDistrict);
+        const recordedCities = this.records
+            .filter(r => (!selectedState || r.state === selectedState) && r.district === selectedDistrict && r.city)
+            .map(r => r.city);
+
+        const cities = Array.from(new Set([...staticCities, ...recordedCities])).sort();
 
         this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>` +
             cities.map(c => `<option value="${this.escapeHTML(c)}">${this.escapeHTML(c)}</option>`).join('');
@@ -483,6 +613,13 @@ export class JanMitraApp {
         document.getElementById('person-context-input').value = person.context || '';
         document.getElementById('person-notes-input').value = person.notes || '';
 
+        // Pre-populate Photo
+        if (person.photograph) {
+            this.setPhotoPreview(person.photograph);
+        } else {
+            this.clearSelectedPhoto();
+        }
+
         // Pre-select Category Checkboxes
         document.querySelectorAll('#add-person-modal .category-checkbox').forEach(cb => {
             cb.checked = (person.categories || []).includes(cb.value);
@@ -511,10 +648,76 @@ export class JanMitraApp {
 
     resetPersonForm() {
         if (this.addPersonForm) this.addPersonForm.reset();
+        this.clearSelectedPhoto();
         document.querySelectorAll('#add-person-modal .category-checkbox').forEach(cb => cb.checked = false);
         if (this.personStateSelect) this.personStateSelect.value = '';
         this.onFormStateChanged('');
         this.editingPersonId = null;
+    }
+
+    // Expanded Person View Modal
+    openExpandedPersonModal(personId) {
+        const person = this.records.find(r => r.id === personId);
+        if (!person) return;
+
+        this.expandedPersonId = personId;
+
+        // Avatar Box
+        const avatarBox = document.getElementById('expanded-avatar-box');
+        if (avatarBox) {
+            if (person.photograph) {
+                avatarBox.innerHTML = `<img src="${person.photograph}" class="expanded-photo-img" alt="${this.escapeHTML(person.name)}">`;
+            } else {
+                avatarBox.innerHTML = `<div class="expanded-avatar-initial">${(person.name || 'P').charAt(0).toUpperCase()}</div>`;
+            }
+        }
+
+        // Name & Origin
+        const nameEl = document.getElementById('expanded-person-name');
+        if (nameEl) nameEl.textContent = person.name || 'Unnamed Person';
+
+        const originEl = document.getElementById('expanded-person-origin');
+        if (originEl) {
+            originEl.textContent = (person.city || person.state || person.district) 
+                ? `📍 ${person.city || ''}${person.district ? ', ' + person.district : ''}${person.state ? ', ' + person.state : ''}`
+                : '';
+        }
+
+        // Details
+        const contactEl = document.getElementById('expanded-person-contact');
+        if (contactEl) contactEl.textContent = person.contact || 'Not recorded';
+
+        const dateEl = document.getElementById('expanded-person-date');
+        if (dateEl) dateEl.textContent = person.date || 'Not recorded';
+
+        const tagsContainer = document.getElementById('expanded-person-tags');
+        if (tagsContainer) {
+            if (person.categories && person.categories.length > 0) {
+                tagsContainer.innerHTML = person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('');
+            } else {
+                tagsContainer.innerHTML = `<span class="detail-value">No categories assigned</span>`;
+            }
+        }
+
+        const locationEl = document.getElementById('expanded-person-location');
+        if (locationEl) {
+            locationEl.textContent = (person.state || person.district || person.city)
+                ? `${person.city ? person.city + ', ' : ''}${person.district ? person.district + ', ' : ''}${person.state || ''}`
+                : 'Not recorded';
+        }
+
+        const contextEl = document.getElementById('expanded-person-context');
+        if (contextEl) contextEl.textContent = person.context ? `"${person.context}"` : 'No context recorded.';
+
+        const notesEl = document.getElementById('expanded-person-notes');
+        if (notesEl) notesEl.textContent = person.notes || 'No notes recorded.';
+
+        if (this.expandedPersonModal) this.expandedPersonModal.classList.add('active');
+    }
+
+    closeExpandedModal() {
+        this.expandedPersonId = null;
+        if (this.expandedPersonModal) this.expandedPersonModal.classList.remove('active');
     }
 
     openFindPeopleModal() {
@@ -568,7 +771,7 @@ export class JanMitraApp {
         const personData = {
             name,
             contact,
-            photograph: '',
+            photograph: this.selectedPhotoBase64 || '',
             date,
             state,
             district,
@@ -583,11 +786,9 @@ export class JanMitraApp {
 
         try {
             if (this.editingPersonId) {
-                // Update existing record
                 await updateDoc(doc(db, 'persons', this.editingPersonId), personData);
                 this.showToast('✓ Person record updated successfully.');
             } else {
-                // Create new record
                 personData.createdAt = serverTimestamp();
                 await addDoc(collection(db, 'persons'), personData);
                 this.showToast('✓ New person record saved.');
@@ -649,9 +850,12 @@ export class JanMitraApp {
         }
 
         container.innerHTML = records.map(person => `
-            <div class="person-card" data-id="${person.id}">
+            <div class="person-card" data-id="${person.id}" onclick="window.janMitraApp.openExpandedPersonModal('${person.id}')">
                 <div class="person-avatar-placeholder">
-                    ${(person.name || 'P').charAt(0).toUpperCase()}
+                    ${person.photograph 
+                        ? `<img src="${person.photograph}" class="card-thumb-img" alt="${this.escapeHTML(person.name)}">`
+                        : (person.name || 'P').charAt(0).toUpperCase()
+                    }
                 </div>
                 <div class="person-details">
                     <div class="person-title-bar">
@@ -661,8 +865,8 @@ export class JanMitraApp {
                         <div class="card-menu-container">
                             <button type="button" class="card-menu-btn" aria-label="Options" onclick="window.janMitraApp.toggleCardMenu(event, '${person.id}')">⋮</button>
                             <div id="menu-${person.id}" class="card-dropdown-menu">
-                                <button type="button" class="dropdown-item" onclick="window.janMitraApp.openEditPersonModal('${person.id}')">✏️ Edit Person</button>
-                                <button type="button" class="dropdown-item item-delete" onclick="window.janMitraApp.confirmDeletePerson('${person.id}')">🗑️ Delete Person</button>
+                                <button type="button" class="dropdown-item" onclick="event.stopPropagation(); window.janMitraApp.openEditPersonModal('${person.id}')">✏️ Edit Person</button>
+                                <button type="button" class="dropdown-item item-delete" onclick="event.stopPropagation(); window.janMitraApp.confirmDeletePerson('${person.id}')">🗑️ Delete Person</button>
                             </div>
                         </div>
                     </div>
@@ -756,9 +960,15 @@ export class JanMitraApp {
         }
 
         listContainer.innerHTML = recordsList.map(person => `
-            <div class="search-result-item">
+            <div class="search-result-item" onclick="window.janMitraApp.openExpandedPersonModal('${person.id}')">
                 <div class="result-header">
-                    <strong>${this.escapeHTML(person.name)}</strong>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        ${person.photograph 
+                            ? `<img src="${person.photograph}" class="result-thumb-img" alt="${this.escapeHTML(person.name)}">`
+                            : ''
+                        }
+                        <strong>${this.escapeHTML(person.name)}</strong>
+                    </div>
                     <span class="result-location">${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ' (' + this.escapeHTML(person.state) + ')' : ''}</span>
                 </div>
                 ${(person.categories && person.categories.length > 0) ? `

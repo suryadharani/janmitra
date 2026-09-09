@@ -175,6 +175,23 @@
                     <p class="modal-subtitle">Record a person's details and origin location.</p>
                 </div>
                 <form id="add-person-form" class="modal-form">
+                    
+                    <!-- Photograph Upload Field -->
+                    <div class="input-field-group span-full">
+                        <label class="field-label">Person Photograph</label>
+                        <div class="photo-upload-wrapper">
+                            <div id="person-photo-preview-box" class="photo-preview-box">
+                                <span id="photo-placeholder-text" class="preview-placeholder-text">No photo selected</span>
+                                <img id="person-photo-img" class="photo-img-element" style="display: none;" alt="Person preview">
+                            </div>
+                            <div class="photo-actions-box">
+                                <input type="file" id="person-photo-input" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+                                <button type="button" id="select-photo-btn" class="btn-secondary-action">📷 Choose Photo</button>
+                                <button type="button" id="remove-photo-btn" class="btn-danger-link" style="display: none;">Remove Photo</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-grid-2">
                         <div class="input-field-group">
                             <label class="field-label">Full Name</label>
@@ -262,6 +279,57 @@
                         <button type="submit" id="save-person-submit-btn" class="btn-primary-divine">Save Person Record</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+
+        <!-- EXPANDED PERSON VIEW MODAL -->
+        <div id="expanded-person-modal" class="app-modal" role="dialog" aria-modal="true">
+            <div class="modal-glass-card modal-wide">
+                <button type="button" class="modal-close-trigger" aria-label="Close">&times;</button>
+                <div class="expanded-person-container">
+                    <div class="expanded-header-box">
+                        <div id="expanded-avatar-box" class="expanded-avatar-box">
+                            <!-- Rendered photo img or initials avatar -->
+                        </div>
+                        <div class="expanded-main-info">
+                            <h3 id="expanded-person-name" class="expanded-name"></h3>
+                            <p id="expanded-person-origin" class="expanded-origin"></p>
+                        </div>
+                    </div>
+
+                    <div class="expanded-body-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Contact Details</span>
+                            <span id="expanded-person-contact" class="detail-value">Not recorded</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Date of Documentation / First Contact</span>
+                            <span id="expanded-person-date" class="detail-value">Not recorded</span>
+                        </div>
+                        <div class="detail-item span-full">
+                            <span class="detail-label">Categories</span>
+                            <div id="expanded-person-tags" class="person-tags"></div>
+                        </div>
+                        <div class="detail-item span-full">
+                            <span class="detail-label">Origin Location</span>
+                            <span id="expanded-person-location" class="detail-value">Not recorded</span>
+                        </div>
+                        <div class="detail-item span-full">
+                            <span class="detail-label">Context & Significance</span>
+                            <p id="expanded-person-context" class="detail-paragraph">No context recorded.</p>
+                        </div>
+                        <div class="detail-item span-full">
+                            <span class="detail-label">Additional Notes</span>
+                            <p id="expanded-person-notes" class="detail-paragraph">No notes recorded.</p>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer expanded-actions-footer">
+                        <button type="button" id="expanded-edit-btn" class="btn-primary-divine">✏️ Edit Person</button>
+                        <button type="button" id="expanded-delete-btn" class="btn-danger-confirm">🗑️ Delete Person</button>
+                    </div>
+                </div>
             </div>
         </div>
 

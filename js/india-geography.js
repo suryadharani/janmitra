@@ -1,6 +1,6 @@
 /**
  * JanMitra — Government of India Local Government Directory (LGD) Master Geography Dataset
- * Authoritative Indian States, Union Territories, and Districts mapping.
+ * Authoritative Indian States, Union Territories, Districts, and Static City Reference Data.
  * Pure static data module — 0 external APIs, 0 cost dependencies.
  */
 
@@ -215,6 +215,95 @@ export const INDIA_GEOGRAPHY = {
   ]
 };
 
+/**
+ * STATIC CITY / TOWN REFERENCE DATA
+ * Keyed by State -> District -> Array of Cities/Towns.
+ * Guarantees built-in suggestions for new databases without requiring pre-existing Firestore records.
+ */
+export const STATIC_CITIES = {
+  "Andhra Pradesh": {
+    "NTR": ["Vijayawada", "Nandigama", "Jaggaiahpet", "Tiruvuru", "Vissannapeta", "Kanchikacherla", "Ibrahimpatnam"],
+    "Guntur": ["Guntur", "Tenali", "Mangalagiri", "Tadikonda", "Ponnur", "Chebrolu", "Prathipadu"],
+    "Bapatla": ["Bapatla", "Chirala", "Repalle", "Addanki", "Parchur", "Karamchedu"],
+    "Palnadu": ["Narasaraopet", "Sattenapalle", "Vinukonda", "Gurazala", "Macherla", "Chilakaluripet"],
+    "Visakhapatnam": ["Visakhapatnam", "Anakapalle", "Bheemunipatnam", "Gajuwaka", "Pendurthi", "Padmanabham"],
+    "Anakapalli": ["Anakapalle", "Chodavaram", "Yelamanchili", "Narsipatnam", "Payakaraopeta", "Atchutapuram"],
+    "Kakinada": ["Kakinada", "Pithapuram", "Samalkot", "Tuni", "Peddapuram", "Anaparthi"],
+    "East Godavari": ["Rajahmundry", "Rajanagaram", "Kovvur", "Nidadavole", "Anaparthy"],
+    "Dr. B.R. Ambedkar Konaseema": ["Amalapuram", "Ravulapalem", "Ramachandrapuram", "Mummidivaram", "Kothapeta", "Razole"],
+    "Eluru": ["Eluru", "Jangareddigudem", "Nuzvid", "Chintalapudi", "Denduluru"],
+    "West Godavari": ["Bhimavaram", "Tadepalligudem", "Tanuku", "Palakollu", "Narsapur"],
+    "Tirupati": ["Tirupati", "Srikalahasti", "Sullurpeta", "Venkatagiri", "Gudur", "Chandragiri"],
+    "Chittoor": ["Chittoor", "Madanapalle", "Palamaner", "Nagari", "Punganoor", "Kuppam"],
+    "Sri Potti Sriramulu Nellore": ["Nellore", "Kavali", "Kandukur", "Atmakur", "Venkatagiri"],
+    "Prakasam": ["Ongole", "Markapur", "Giddalur", "Kanigiri", "Podili", "Cumbum"],
+    "Kurnool": ["Kurnool", "Adoni", "Yemmiganur", "Pattikonda", "Kodumur", "Done"],
+    "Nandyal": ["Nandyal", "Dhone", "Allagadda", "Nandikotkur", "Atmakur", "Srisailam", "Banaganapalle"],
+    "Ananthapuramu": ["Anantapur", "Guntakal", "Tadipatri", "Dharmavaram", "Rayadurg", "Uravakonda"],
+    "Sri Sathya Sai": ["Puttaparthi", "Kadiri", "Hindupur", "Dharmavaram", "Penukonda", "Madakasira"],
+    "YSR Kadapa": ["Kadapa", "Proddatur", "Pulivendula", "Jammalamadugu", "Badvel", "Mydukur", "Kamalapuram"],
+    "Annamayya": ["Rayachoti", "Rajampet", "Madanapalle", "Thamballapalle", "Railway Koduru"],
+    "Srikakulam": ["Srikakulam", "Palasa", "Amadalavalasa", "Narasannapeta", "Ichchapuram", "Tekkali"],
+    "Vizianagaram": ["Vizianagaram", "Bobbili", "Parvathipuram", "Salur", "Cheepurupalli", "Gajapathinagaram"],
+    "Parvathipuram Manyam": ["Parvathipuram", "Palakonda", "Salur", "Kurupam"],
+    "Alluri Sitharama Raju": ["Paderu", "Araku Valley", "Chintapalle", "Rampachodavaram", "Maredumilli"]
+  },
+  "Telangana": {
+    "Hyderabad": ["Hyderabad", "Secunderabad", "Khairatabad", "Amberpet", "Asifnagar", "Bahadurpura"],
+    "Ranga Reddy": ["Cyberabad", "Gachibowli", "Madhapur", "Shamshabad", "Ibrahimpatnam", "Rajendranagar"],
+    "Medchal-Malkajgiri": ["Malkajgiri", "Kukatpally", "Quthbullapur", "Uppal", "Medchal", "Alwal"],
+    "Hanamkonda": ["Hanamkonda", "Kazipet", "Hasanparthy"],
+    "Warangal": ["Warangal", "Narsampet", "Wardhannapet"],
+    "Karimnagar": ["Karimnagar", "Huzurabad", "Jamtikunta", "Choppadandi"],
+    "Nizamabad": ["Nizamabad", "Bodhan", "Armoor", "Balkonda"],
+    "Khammam": ["Khammam", "Sathupalli", "Wyra", "Madhira", "Kalluru"],
+    "Nalgonda": ["Nalgonda", "Miryalaguda", "Devarakonda", "Nakarakal"]
+  },
+  "Karnataka": {
+    "Bengaluru Urban": ["Bengaluru", "Indiranagar", "Koramangala", "Jayanagar", "Whitefield", "Electronic City", "Yelahanka"],
+    "Bengaluru Rural": ["Devanahalli", "Doddaballapura", "Hosakote", "Nelamangala"],
+    "Mysuru": ["Mysuru", "Nanjangud", "Hunsur", "Piriyapatna", "T. Narasipura"],
+    "Dakshina Kannada": ["Mangaluru", "Puttur", "Bantwal", "Belthangady", "Sulya"],
+    "Udupi": ["Udupi", "Kundapura", "Karkala", "Kapu"],
+    "Dharwad": ["Hubballi", "Dharwad", "Kalghatgi", "Navalgund"],
+    "Kalaburagi": ["Kalaburagi", "Sedam", "Chincholi", "Aland"],
+    "Belagavi": ["Belagavi", "Gokak", "Chikkodi", "Bailhongal", "Athani"]
+  },
+  "Tamil Nadu": {
+    "Chennai": ["Chennai", "Adyar", "Anna Nagar", "T. Nagar", "Velachery", "Mylapore", "Tambaram"],
+    "Coimbatore": ["Coimbatore", "Pollachi", "Mettupalayam", "Sulur", "Valparai"],
+    "Madurai": ["Madurai", "Melur", "Tirumangalam", "Usilampatti"],
+    "Tiruchirappalli": ["Tiruchirappalli", "Srirangam", "Lalgudi", "Thuraiyur", "Manapparai"],
+    "Salem": ["Salem", "Attur", "Mettur", "Omalur", "Edappadi"]
+  },
+  "Maharashtra": {
+    "Mumbai City": ["Mumbai", "Colaba", "Fort", "Dadra", "Worli"],
+    "Mumbai Suburban": ["Bandra", "Andheri", "Juhu", "Borivali", "Kurla", "Ghatkopar"],
+    "Thane": ["Thane", "Kalyan", "Dombivli", "Bhiwandi", "Mira-Bhayandar"],
+    "Pune": ["Pune", "Pimpri-Chinchwad", "Baramati", "Shirur", "Lonavala"],
+    "Nagpur": ["Nagpur", "Kamptee", "Ramtek", "Hingna", "Katol"],
+    "Nashik": ["Nashik", "Malegaon", "Sinnar", "Igatpuri", "Niphad"]
+  },
+  "Delhi": {
+    "New Delhi": ["New Delhi", "Connaught Place", "Chanakyapuri"],
+    "Central Delhi": ["Central Delhi", "Daryaganj", "Karol Bagh", "Paharganj"],
+    "South Delhi": ["Hauz Khas", "Saket", "Greater Kailash", "Vasant Kunj"]
+  },
+  "Uttar Pradesh": {
+    "Lucknow": ["Lucknow", "Gomti Nagar", "Hazratganj", "Alambagh", "Indira Nagar"],
+    "Varanasi": ["Varanasi", "Sarnath", "Pindra", "Shivpur"],
+    "Prayagraj": ["Prayagraj", "Phulpur", "Naini", "Karchana"],
+    "Agra": ["Agra", "Fatehpur Sikri", "Kiraoili", "Kheragarh"],
+    "Ayodhya": ["Ayodhya", "Faizabad", "Rudauli", "Bikapur"],
+    "Gautam Buddha Nagar": ["Noida", "Greater Noida", "Dadri", "Jewar"]
+  },
+  "Uttarakhand": {
+    "Dehradun": ["Dehradun", "Rishikesh", "Mussoorie", "Vikas Nagar", "Clement Town"],
+    "Haridwar": ["Haridwar", "Roorkee", "Laksar", "Bhagwanpur"],
+    "Almora": ["Almora", "Ranikhet", "Dwarahat", "Kausani"]
+  }
+};
+
 // Returns sorted list of all 36 States & Union Territories
 export function getStatesList() {
   return Object.keys(INDIA_GEOGRAPHY).sort();
@@ -224,4 +313,13 @@ export function getStatesList() {
 export function getDistrictsForState(stateName) {
   if (!stateName || !INDIA_GEOGRAPHY[stateName]) return [];
   return [...INDIA_GEOGRAPHY[stateName]].sort();
+}
+
+// Returns static city/town reference suggestions for a State and District
+export function getCitiesForDistrict(stateName, districtName) {
+  if (!stateName || !districtName) return [];
+  if (STATIC_CITIES[stateName] && STATIC_CITIES[stateName][districtName]) {
+    return [...STATIC_CITIES[stateName][districtName]].sort();
+  }
+  return [];
 }
