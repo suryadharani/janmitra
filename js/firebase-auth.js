@@ -11,12 +11,16 @@ import {
     collection, 
     addDoc, 
     getDocs, 
+    updateDoc, 
+    deleteDoc, 
+    doc, 
     query, 
     orderBy, 
     serverTimestamp 
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 import { firebaseConfig, USERNAME_MAP, DEFAULT_RECOVERY_EMAIL, CATEGORIES } from './firebase-config.js';
+import { INDIA_GEOGRAPHY, getStatesList, getDistrictsForState } from './india-geography.js';
 
 // Initialize Firebase Production Services
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -28,9 +32,12 @@ export class JanMitraApp {
     constructor() {
         this.currentUser = null;
         this.records = []; // Production Firestore records array
+        this.editingPersonId = null;
+        this.deletingPersonId = null;
 
         this.initUI();
         this.initListeners();
+        this.initGeographyDropdowns();
     }
 
     initUI() {
@@ -42,6 +49,7 @@ export class JanMitraApp {
         this.loginBtn = document.getElementById('login-btn');
         this.authError = document.getElementById('auth-error');
         this.signOutBtn = document.getElementById('sign-out-btn');
+        this.toastAlert = document.getElementById('toast-notification');
         
         // Forgot Password Elements
         this.forgotBtn = document.getElementById('forgot-password-btn');
@@ -53,14 +61,25 @@ export class JanMitraApp {
         // Modal Views for Dashboard Actions
         this.addPersonModal = document.getElementById('add-person-modal');
         this.findPeopleModal = document.getElementById('find-people-modal');
+        this.deleteConfirmModal = document.getElementById('delete-confirm-modal');
         this.addPersonForm = document.getElementById('add-person-form');
+        this.formModalTitle = document.getElementById('person-form-modal-title');
+        this.submitPersonBtn = document.getElementById('save-person-submit-btn');
+
+        // Add/Edit Location Elements
+        this.personStateSelect = document.getElementById('person-state-input');
+        this.personDistrictSelect = document.getElementById('person-district-input');
+        this.personCityInput = document.getElementById('person-city-input');
 
         // Find People Filter Elements
         this.searchInput = document.getElementById('search-person-input');
-        this.filterCategorySelect = document.getElementById('filter-category-select');
         this.filterStateSelect = document.getElementById('filter-state-select');
         this.filterDistrictSelect = document.getElementById('filter-district-select');
         this.filterCitySelect = document.getElementById('filter-city-select');
+
+        // Delete Confirm Controls
+        this.cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        this.confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     }
 
     initListeners() {
@@ -114,30 +133,177 @@ export class JanMitraApp {
             findPeopleBtn.addEventListener('click', () => this.openFindPeopleModal());
         }
 
-        // Add Person Form Submit
-        if (this.addPersonForm) {
-            this.addPersonForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleCreatePerson();
+        // Add/Edit Person Form Cascading Location Handlers
+        if (this.personStateSelect) {
+            this.personStateSelect.addEventListener('change', (e) => {
+                this.onFormStateChanged(e.target.value);
             });
         }
 
-        // Search & Structured Filter Listeners
+        if (this.personDistrictSelect) {
+            this.personDistrictSelect.addEventListener('change', (e) => {
+                this.onFormDistrictChanged(e.target.value);
+            });
+        }
+
+        // Add/Edit Person Form Submit
+        if (this.addPersonForm) {
+            this.addPersonForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSavePerson();
+            });
+        }
+
+        // Find People Cascading Filters Listeners
         const applyFilters = () => this.applyStructuredFilters();
 
         if (this.searchInput) this.searchInput.addEventListener('input', applyFilters);
-        if (this.filterCategorySelect) this.filterCategorySelect.addEventListener('change', applyFilters);
-        if (this.filterStateSelect) this.filterStateSelect.addEventListener('change', applyFilters);
-        if (this.filterDistrictSelect) this.filterDistrictSelect.addEventListener('change', applyFilters);
-        if (this.filterCitySelect) this.filterCitySelect.addEventListener('change', applyFilters);
+        
+        document.querySelectorAll('.filter-category-checkbox').forEach(cb => {
+            cb.addEventListener('change', applyFilters);
+        });
+
+        if (this.filterStateSelect) {
+            this.filterStateSelect.addEventListener('change', (e) => {
+                this.onFilterStateChanged(e.target.value);
+                applyFilters();
+            });
+        }
+
+        if (this.filterDistrictSelect) {
+            this.filterDistrictSelect.addEventListener('change', (e) => {
+                this.onFilterDistrictChanged(e.target.value);
+                applyFilters();
+            });
+        }
+
+        if (this.filterCitySelect) {
+            this.filterCitySelect.addEventListener('change', applyFilters);
+        }
+
+        // Delete Confirmation Modal Listeners
+        if (this.cancelDeleteBtn) {
+            this.cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
+        }
+
+        if (this.confirmDeleteBtn) {
+            this.confirmDeleteBtn.addEventListener('click', () => this.executeDeletePerson());
+        }
 
         // Modal Close Buttons
         document.querySelectorAll('.modal-close-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.app-modal');
-                if (modal) modal.classList.remove('active');
+                if (modal) {
+                    modal.classList.remove('active');
+                    if (modal === this.addPersonModal) {
+                        this.resetPersonForm();
+                    }
+                }
             });
         });
+
+        // Close Card Dropdown Menus on Outside Click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.card-menu-container')) {
+                document.querySelectorAll('.card-dropdown-menu.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+    }
+
+    // Populate Master Geography (States/UTs)
+    initGeographyDropdowns() {
+        const states = getStatesList();
+        
+        if (this.personStateSelect) {
+            this.personStateSelect.innerHTML = `<option value="">Select State/UT...</option>` +
+                states.map(s => `<option value="${this.escapeHTML(s)}">${this.escapeHTML(s)}</option>`).join('');
+        }
+
+        if (this.filterStateSelect) {
+            this.filterStateSelect.innerHTML = `<option value="">All States</option>` +
+                states.map(s => `<option value="${this.escapeHTML(s)}">${this.escapeHTML(s)}</option>`).join('');
+        }
+    }
+
+    // Add/Edit Form State Cascade
+    onFormStateChanged(selectedState) {
+        if (!selectedState) {
+            this.personDistrictSelect.innerHTML = `<option value="">Select District...</option>`;
+            this.personDistrictSelect.disabled = true;
+            this.personCityInput.value = '';
+            this.personCityInput.disabled = true;
+            return;
+        }
+
+        const districts = getDistrictsForState(selectedState);
+        this.personDistrictSelect.innerHTML = `<option value="">Select District...</option>` +
+            districts.map(d => `<option value="${this.escapeHTML(d)}">${this.escapeHTML(d)}</option>`).join('');
+        this.personDistrictSelect.disabled = false;
+        
+        this.personCityInput.value = '';
+        this.personCityInput.disabled = true;
+    }
+
+    // Add/Edit Form District Cascade
+    onFormDistrictChanged(selectedDistrict) {
+        if (!selectedDistrict) {
+            this.personCityInput.disabled = true;
+            return;
+        }
+
+        this.personCityInput.disabled = false;
+        
+        // Populate known recorded cities datalist for this district
+        const knownCities = Array.from(new Set(
+            this.records
+                .filter(r => r.state === this.personStateSelect.value && r.district === selectedDistrict && r.city)
+                .map(r => r.city)
+        )).sort();
+
+        const datalist = document.getElementById('known-cities-list');
+        if (datalist) {
+            datalist.innerHTML = knownCities.map(c => `<option value="${this.escapeHTML(c)}"></option>`).join('');
+        }
+    }
+
+    // Filter Modal State Cascade
+    onFilterStateChanged(selectedState) {
+        if (!selectedState) {
+            this.filterDistrictSelect.innerHTML = `<option value="">All Districts</option>`;
+            this.filterDistrictSelect.disabled = true;
+            this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>`;
+            this.filterCitySelect.disabled = true;
+            return;
+        }
+
+        const districts = getDistrictsForState(selectedState);
+        this.filterDistrictSelect.innerHTML = `<option value="">All Districts</option>` +
+            districts.map(d => `<option value="${this.escapeHTML(d)}">${this.escapeHTML(d)}</option>`).join('');
+        this.filterDistrictSelect.disabled = false;
+
+        this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>`;
+        this.filterCitySelect.disabled = true;
+    }
+
+    // Filter Modal District Cascade
+    onFilterDistrictChanged(selectedDistrict) {
+        const selectedState = this.filterStateSelect?.value;
+        if (!selectedDistrict) {
+            this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>`;
+            this.filterCitySelect.disabled = true;
+            return;
+        }
+
+        const cities = Array.from(new Set(
+            this.records
+                .filter(r => (!selectedState || r.state === selectedState) && r.district === selectedDistrict && r.city)
+                .map(r => r.city)
+        )).sort();
+
+        this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>` +
+            cities.map(c => `<option value="${this.escapeHTML(c)}">${this.escapeHTML(c)}</option>`).join('');
+        this.filterCitySelect.disabled = false;
     }
 
     // Resolve Username to Auth Email
@@ -233,7 +399,6 @@ export class JanMitraApp {
         this.currentUser = user;
         this.setLoading(false);
 
-        // Hide Login Screen, Show Dashboard
         if (this.loginScreen) this.loginScreen.style.display = 'none';
         if (this.appDashboard) {
             this.appDashboard.style.display = 'flex';
@@ -245,7 +410,6 @@ export class JanMitraApp {
             userDisplay.textContent = 'janmitra';
         }
 
-        // Fetch real production records from Firestore /persons collection
         await this.fetchPersonRecords();
     }
 
@@ -285,17 +449,77 @@ export class JanMitraApp {
         }
     }
 
-    // Modal Actions
+    showToast(message, type = 'success') {
+        if (!this.toastAlert) return;
+        this.toastAlert.textContent = message;
+        this.toastAlert.className = `toast-notification toast-${type} active`;
+        setTimeout(() => {
+            this.toastAlert.classList.remove('active');
+        }, 3000);
+    }
+
+    // Open Add Person Modal
     openAddPersonModal() {
-        if (this.addPersonModal) {
-            this.addPersonModal.classList.add('active');
+        this.resetPersonForm();
+        this.editingPersonId = null;
+        if (this.formModalTitle) this.formModalTitle.textContent = "Add Person";
+        if (this.submitPersonBtn) this.submitPersonBtn.textContent = "Save Person Record";
+        if (this.addPersonModal) this.addPersonModal.classList.add('active');
+    }
+
+    // Open Edit Person Modal
+    openEditPersonModal(personId) {
+        const person = this.records.find(r => r.id === personId);
+        if (!person) return;
+
+        this.editingPersonId = personId;
+        if (this.formModalTitle) this.formModalTitle.textContent = "Edit Person";
+        if (this.submitPersonBtn) this.submitPersonBtn.textContent = "Update Person Record";
+
+        // Pre-populate Text Fields
+        document.getElementById('person-name-input').value = person.name || '';
+        document.getElementById('person-contact-input').value = person.contact || '';
+        document.getElementById('person-date-input').value = person.date || '';
+        document.getElementById('person-context-input').value = person.context || '';
+        document.getElementById('person-notes-input').value = person.notes || '';
+
+        // Pre-select Category Checkboxes
+        document.querySelectorAll('#add-person-modal .category-checkbox').forEach(cb => {
+            cb.checked = (person.categories || []).includes(cb.value);
+        });
+
+        // Pre-select State, District, City
+        if (person.state) {
+            this.personStateSelect.value = person.state;
+            this.onFormStateChanged(person.state);
+
+            if (person.district) {
+                this.personDistrictSelect.value = person.district;
+                this.onFormDistrictChanged(person.district);
+
+                if (person.city) {
+                    this.personCityInput.value = person.city;
+                }
+            }
+        } else {
+            this.personStateSelect.value = '';
+            this.onFormStateChanged('');
         }
+
+        if (this.addPersonModal) this.addPersonModal.classList.add('active');
+    }
+
+    resetPersonForm() {
+        if (this.addPersonForm) this.addPersonForm.reset();
+        document.querySelectorAll('#add-person-modal .category-checkbox').forEach(cb => cb.checked = false);
+        if (this.personStateSelect) this.personStateSelect.value = '';
+        this.onFormStateChanged('');
+        this.editingPersonId = null;
     }
 
     openFindPeopleModal() {
         if (this.findPeopleModal) {
             this.findPeopleModal.classList.add('active');
-            this.populateLocationFilterDropdowns();
             this.resetFilters();
             this.renderFindPeopleList(this.records);
         }
@@ -313,28 +537,28 @@ export class JanMitraApp {
             const querySnapshot = await getDocs(q);
 
             this.records = [];
-            querySnapshot.forEach((doc) => {
-                this.records.push({ id: doc.id, ...doc.data() });
+            querySnapshot.forEach((docSnap) => {
+                this.records.push({ id: docSnap.id, ...docSnap.data() });
             });
 
             this.renderRecordsList(this.records);
-            this.populateLocationFilterDropdowns();
         } catch (err) {
             console.error("Error fetching persons from Firestore:", err);
             this.renderRecordsList([]);
         }
     }
 
-    async handleCreatePerson() {
+    // Save or Update Person Record
+    async handleSavePerson() {
         const name = document.getElementById('person-name-input')?.value.trim();
         const contact = document.getElementById('person-contact-input')?.value.trim() || '';
         const date = document.getElementById('person-date-input')?.value || '';
-        const state = document.getElementById('person-state-input')?.value.trim() || '';
-        const district = document.getElementById('person-district-input')?.value.trim() || '';
+        const state = document.getElementById('person-state-input')?.value || '';
+        const district = document.getElementById('person-district-input')?.value || '';
         const city = document.getElementById('person-city-input')?.value.trim() || '';
         
         // Multi-select Categories
-        const checkedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+        const checkedCategories = Array.from(document.querySelectorAll('#add-person-modal .category-checkbox:checked')).map(cb => cb.value);
 
         const context = document.getElementById('person-context-input')?.value.trim() || '';
         const notes = document.getElementById('person-notes-input')?.value.trim() || '';
@@ -349,28 +573,63 @@ export class JanMitraApp {
             state,
             district,
             city,
-            categories: checkedCategories, // Array of selected categories
+            categories: checkedCategories,
             context,
-            notes,
-            createdAt: serverTimestamp()
+            notes
         };
 
         const submitBtn = this.addPersonForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
 
         try {
-            await addDoc(collection(db, 'persons'), personData);
-            if (this.addPersonModal) this.addPersonModal.classList.remove('active');
-            if (this.addPersonForm) {
-                this.addPersonForm.reset();
-                document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
+            if (this.editingPersonId) {
+                // Update existing record
+                await updateDoc(doc(db, 'persons', this.editingPersonId), personData);
+                this.showToast('✓ Person record updated successfully.');
+            } else {
+                // Create new record
+                personData.createdAt = serverTimestamp();
+                await addDoc(collection(db, 'persons'), personData);
+                this.showToast('✓ New person record saved.');
             }
+
+            if (this.addPersonModal) this.addPersonModal.classList.remove('active');
+            this.resetPersonForm();
             await this.fetchPersonRecords();
         } catch (err) {
-            console.error("Error saving person record to Firestore:", err);
+            console.error("Error saving person record:", err);
             alert("Error saving record: " + (err.message || "Permission denied or network error."));
         } finally {
             if (submitBtn) submitBtn.disabled = false;
+        }
+    }
+
+    // Delete Modal Actions
+    confirmDeletePerson(personId) {
+        this.deletingPersonId = personId;
+        if (this.deleteConfirmModal) {
+            this.deleteConfirmModal.classList.add('active');
+        }
+    }
+
+    closeDeleteModal() {
+        this.deletingPersonId = null;
+        if (this.deleteConfirmModal) {
+            this.deleteConfirmModal.classList.remove('active');
+        }
+    }
+
+    async executeDeletePerson() {
+        if (!this.deletingPersonId) return;
+
+        try {
+            await deleteDoc(doc(db, 'persons', this.deletingPersonId));
+            this.closeDeleteModal();
+            this.showToast('✓ Record deleted successfully.');
+            await this.fetchPersonRecords();
+        } catch (err) {
+            console.error("Error deleting person record:", err);
+            alert("Error deleting record: " + (err.message || "Permission denied."));
         }
     }
 
@@ -390,12 +649,24 @@ export class JanMitraApp {
         }
 
         container.innerHTML = records.map(person => `
-            <div class="person-card">
+            <div class="person-card" data-id="${person.id}">
                 <div class="person-avatar-placeholder">
                     ${(person.name || 'P').charAt(0).toUpperCase()}
                 </div>
                 <div class="person-details">
-                    <h4 class="person-name">${this.escapeHTML(person.name)}</h4>
+                    <div class="person-title-bar">
+                        <h4 class="person-name">${this.escapeHTML(person.name)}</h4>
+                        
+                        <!-- Subtle Overflow Menu -->
+                        <div class="card-menu-container">
+                            <button type="button" class="card-menu-btn" aria-label="Options" onclick="window.janMitraApp.toggleCardMenu(event, '${person.id}')">⋮</button>
+                            <div id="menu-${person.id}" class="card-dropdown-menu">
+                                <button type="button" class="dropdown-item" onclick="window.janMitraApp.openEditPersonModal('${person.id}')">✏️ Edit Person</button>
+                                <button type="button" class="dropdown-item item-delete" onclick="window.janMitraApp.confirmDeletePerson('${person.id}')">🗑️ Delete Person</button>
+                            </div>
+                        </div>
+                    </div>
+
                     ${(person.city || person.state || person.district) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
                     ${person.context ? `<p class="person-context">"${this.escapeHTML(person.context)}"</p>` : ''}
                     ${(person.categories && person.categories.length > 0) ? `
@@ -408,54 +679,39 @@ export class JanMitraApp {
         `).join('');
     }
 
-    // Dynamic Filter Population
-    populateLocationFilterDropdowns() {
-        if (!this.records) return;
+    toggleCardMenu(event, personId) {
+        event.stopPropagation();
+        const menu = document.getElementById(`menu-${personId}`);
+        if (!menu) return;
 
-        const states = Array.from(new Set(this.records.map(r => r.state).filter(Boolean))).sort();
-        const districts = Array.from(new Set(this.records.map(r => r.district).filter(Boolean))).sort();
-        const cities = Array.from(new Set(this.records.map(r => r.city).filter(Boolean))).sort();
+        const isCurrentlyActive = menu.classList.contains('active');
+        document.querySelectorAll('.card-dropdown-menu.active').forEach(m => m.classList.remove('active'));
 
-        if (this.filterStateSelect) {
-            const current = this.filterStateSelect.value;
-            this.filterStateSelect.innerHTML = `<option value="">All States</option>` + 
-                states.map(s => `<option value="${this.escapeHTML(s)}">${this.escapeHTML(s)}</option>`).join('');
-            this.filterStateSelect.value = current;
-        }
-
-        if (this.filterDistrictSelect) {
-            const current = this.filterDistrictSelect.value;
-            this.filterDistrictSelect.innerHTML = `<option value="">All Districts</option>` + 
-                districts.map(d => `<option value="${this.escapeHTML(d)}">${this.escapeHTML(d)}</option>`).join('');
-            this.filterDistrictSelect.value = current;
-        }
-
-        if (this.filterCitySelect) {
-            const current = this.filterCitySelect.value;
-            this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>` + 
-                cities.map(c => `<option value="${this.escapeHTML(c)}">${this.escapeHTML(c)}</option>`).join('');
-            this.filterCitySelect.value = current;
+        if (!isCurrentlyActive) {
+            menu.classList.add('active');
         }
     }
 
     resetFilters() {
         if (this.searchInput) this.searchInput.value = '';
-        if (this.filterCategorySelect) this.filterCategorySelect.value = '';
+        document.querySelectorAll('.filter-category-checkbox').forEach(cb => cb.checked = false);
         if (this.filterStateSelect) this.filterStateSelect.value = '';
-        if (this.filterDistrictSelect) this.filterDistrictSelect.value = '';
-        if (this.filterCitySelect) this.filterCitySelect.value = '';
+        this.onFilterStateChanged('');
     }
 
-    // Structured Combined Filter Logic (AND operations)
+    // Structured Combined Filter Logic (Multi-category OR + State/District/City AND)
     applyStructuredFilters() {
         const searchTerm = (this.searchInput?.value || '').trim().toLowerCase();
-        const categoryVal = this.filterCategorySelect?.value || '';
+        
+        // Selected Category Filter Checkboxes (OR logic)
+        const selectedCategories = Array.from(document.querySelectorAll('.filter-category-checkbox:checked')).map(cb => cb.value);
+
         const stateVal = this.filterStateSelect?.value || '';
         const districtVal = this.filterDistrictSelect?.value || '';
         const cityVal = this.filterCitySelect?.value || '';
 
         const filtered = this.records.filter(p => {
-            // Name / Context search
+            // 1. Text Search (matches Name, Context, or Notes)
             if (searchTerm) {
                 const nameMatch = (p.name || '').toLowerCase().includes(searchTerm);
                 const contextMatch = (p.context || '').toLowerCase().includes(searchTerm);
@@ -463,23 +719,23 @@ export class JanMitraApp {
                 if (!nameMatch && !contextMatch && !notesMatch) return false;
             }
 
-            // Category filter
-            if (categoryVal) {
-                const hasCategory = (p.categories || []).includes(categoryVal);
-                if (!hasCategory) return false;
+            // 2. Multi-category Filter (OR Logic within categories)
+            if (selectedCategories.length > 0) {
+                const hasMatchingCategory = (p.categories || []).some(c => selectedCategories.includes(c));
+                if (!hasMatchingCategory) return false;
             }
 
-            // State filter
+            // 3. State Filter (AND Logic)
             if (stateVal && p.state !== stateVal) {
                 return false;
             }
 
-            // District filter
+            // 4. District Filter (AND Logic)
             if (districtVal && p.district !== districtVal) {
                 return false;
             }
 
-            // City filter
+            // 5. City Filter (AND Logic)
             if (cityVal && p.city !== cityVal) {
                 return false;
             }
@@ -503,7 +759,7 @@ export class JanMitraApp {
             <div class="search-result-item">
                 <div class="result-header">
                     <strong>${this.escapeHTML(person.name)}</strong>
-                    <span class="result-location">${this.escapeHTML(person.city || '')}${person.state ? ' (' + this.escapeHTML(person.state) + ')' : ''}</span>
+                    <span class="result-location">${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ' (' + this.escapeHTML(person.state) + ')' : ''}</span>
                 </div>
                 ${(person.categories && person.categories.length > 0) ? `
                     <div class="person-tags" style="margin-top: 4px;">

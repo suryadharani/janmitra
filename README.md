@@ -15,6 +15,14 @@ JanMitra is strictly a private personal space:
 
 ---
 
+## 🇮🇳 India Geography Master Data & Cascading Location
+
+- **LGD Master Data**: Built-in master geography dataset derived from the Government of India Local Government Directory (LGD). Covers all **28 States**, **8 Union Territories**, and **780+ Districts** with zero external API calls or cost dependencies.
+- **Cascading Selectors**: State/UT selection dynamically enables and filters District choices. City/Town provides known recorded cities while preserving full manual entry freedom ("Other / Enter manually").
+- **Origin Association**: State, District, and City/Town fields strictly represent the person's own home/origin/association.
+
+---
+
 ## 🛕 Divine Atmosphere & Visual Design
 
 The landing and authentication experience features an atmospheric visual environment inspired by **Lord Shiva**:
@@ -24,12 +32,12 @@ The landing and authentication experience features an atmospheric visual environ
 
 ---
 
-## 👤 Person-Centric Data Model & Multi-Category System
+## 👤 Person Management & Multi-Category System
 
 JanMitra prioritizes **Person** as the core entity:
-- **Person Origin Focus**: State, District, and City/Town fields record the person's own home/origin association rather than transient meeting locations.
 - **Multi-Category Assignment**: A single person record supports multiple categories simultaneously (e.g. `["Friends", "Professionals"]`) selected from official categories (*Sadhus*, *Swamijis*, *Peethadhipathis*, *Friends*, *Professionals*, *Job Holders*, *Skilled Women*, *Skilled Men*, *Devotee Sevaks*).
-- **Structured Search & Filtering**: Includes text search combined with structured Category, State, District, and City/Town filters.
+- **Subtle Edit & Delete Controls**: Each card features a clean overflow menu `⋮` with options to edit existing records via `updateDoc()` or permanently remove records via `deleteDoc()` with confirmation.
+- **Structured Search & Filtering**: Text search combined with multi-category OR selection and cascading State, District, and City/Town AND filters.
 
 ---
 
@@ -37,13 +45,10 @@ JanMitra prioritizes **Person** as the core entity:
 
 - **Phase 1**: Initial domain setup and responsive preview page.
 - **Phase 2**: Private Firebase Authentication system with `janmitra` username mapping and Lord Shiva divine background.
-- **Phase 3**:
-  - Connected to production Firebase project (`janmitra-598fe`).
-  - Firebase Email/Password authentication system.
-  - Production Firestore person records collection (`/persons`).
-  - Single-user Firestore security rules (`request.auth.uid == "GHsl8zYWUYM9Ebo9kOUHxAEZIBn1"`).
-  - Production data mode with zero demo/sample records.
-- **Phase 3.1**:
-  - Multi-select category selection support per person record.
-  - Person-centric terminology refinement (e.g., *Date of Documentation / First Contact*, *Context & Significance*).
-  - Structured combined filters (Category, State, District, City/Town) in Find People interface.
+- **Phase 3**: Connected to production Firebase project (`janmitra-598fe`), single-user security policy, and production data mode.
+- **Phase 3.1**: Multi-category support, person-centric terminology, and structured filtering.
+- **Phase 3.2**:
+  - Integrated India LGD master geography dataset (28 States, 8 UTs, 780+ Districts).
+  - Cascading State $\rightarrow$ District $\rightarrow$ City/Town selector with custom manual entry.
+  - Person editing (`updateDoc`) and deletion with confirmation (`deleteDoc`) via card menu `⋮`.
+  - Multi-category OR filter combined with cascading location AND filters in Find People view.
