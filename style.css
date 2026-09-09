@@ -682,6 +682,103 @@ html, body {
     letter-spacing: 0.06em;
 }
 
+.span-full {
+    grid-column: 1 / -1;
+}
+
+.category-checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.category-pill-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.category-pill-label:hover {
+    border-color: var(--emerald-primary);
+    color: var(--text-main);
+}
+
+.category-pill-label:has(.category-checkbox:checked) {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--emerald-primary);
+    color: #a7f3d0;
+    font-weight: 600;
+}
+
+.category-checkbox {
+    accent-color: var(--emerald-primary);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.filter-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+    margin-bottom: 18px;
+}
+
+.search-results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.search-result-item {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.95rem;
+}
+
+.result-location {
+    font-size: 0.825rem;
+    color: var(--emerald-primary);
+}
+
+.result-meta {
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    font-style: italic;
+}
+
+.no-search-results {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 24px 0;
+}
+
 /* Animations & Responsive */
 .fade-in {
     animation: fadeIn 0.4s ease forwards;
@@ -710,4 +807,9 @@ html, body {
     .action-card {
         padding: 18px 16px;
     }
+
+    .filter-controls-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
+

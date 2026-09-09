@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JanMitra — Remembering the people who matter</title>
-    <meta name="description" content="JanMitra — A private personal space for remembering important people and meaningful meetings.">
+    <meta name="description" content="JanMitra — A private personal space for remembering important people and meaningful connections.">
     
     <!-- Open Graph & Social Metadata -->
     <meta property="og:title" content="JanMitra">
@@ -184,24 +184,41 @@
                         </div>
 
                         <div class="input-field-group">
-                            <label class="field-label">Meeting Date</label>
+                            <label class="field-label">Date of Documentation / First Contact</label>
                             <input type="date" id="person-date-input" class="auth-input">
                         </div>
 
-                        <div class="input-field-group">
-                            <label class="field-label">Category</label>
-                            <select id="person-category-input" class="auth-input auth-select">
-                                <option value="">Select Category...</option>
-                                <option value="Sadhus">Sadhus</option>
-                                <option value="Swamijis">Swamijis</option>
-                                <option value="Peethadhipathis">Peethadhipathis</option>
-                                <option value="Friends">Friends</option>
-                                <option value="Professionals">Professionals</option>
-                                <option value="Job Holders">Job Holders</option>
-                                <option value="Skilled Women">Skilled Women</option>
-                                <option value="Skilled Men">Skilled Men</option>
-                                <option value="Devotee Sevaks">Devotee Sevaks</option>
-                            </select>
+                        <div class="input-field-group span-full">
+                            <label class="field-label">Categories (Select one or multiple)</label>
+                            <div class="category-checkbox-grid">
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Sadhus"> Sadhus
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Swamijis"> Swamijis
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Peethadhipathis"> Peethadhipathis
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Friends"> Friends
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Professionals"> Professionals
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Job Holders"> Job Holders
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Skilled Women"> Skilled Women
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Skilled Men"> Skilled Men
+                                </label>
+                                <label class="category-pill-label">
+                                    <input type="checkbox" class="category-checkbox" value="Devotee Sevaks"> Devotee Sevaks
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -224,8 +241,8 @@
                     </div>
 
                     <div class="input-field-group">
-                        <label class="field-label">Context & Significance of Meeting</label>
-                        <textarea id="person-context-input" class="auth-input auth-textarea" rows="2" placeholder="Context of meeting..."></textarea>
+                        <label class="field-label">Context & Significance</label>
+                        <textarea id="person-context-input" class="auth-input auth-textarea" rows="2" placeholder="Context or significance..."></textarea>
                     </div>
 
                     <div class="input-field-group">
@@ -247,12 +264,55 @@
                 <button type="button" class="modal-close-trigger" aria-label="Close">&times;</button>
                 <div class="modal-header">
                     <h3 class="modal-title">Find People</h3>
-                    <p class="modal-subtitle">Search by person's name, origin city, state, or category.</p>
+                    <p class="modal-subtitle">Filter recorded individuals by name, category, or origin location.</p>
                 </div>
                 <div class="modal-body">
+                    <!-- Name Search -->
                     <div class="input-field-group">
-                        <input type="search" id="search-person-input" class="auth-input" placeholder="🔍 Type name, origin city, or category...">
+                        <input type="search" id="search-person-input" class="auth-input" placeholder="🔍 Search by name, context, or notes...">
                     </div>
+
+                    <!-- Structured Filters Bar -->
+                    <div class="filter-controls-grid">
+                        <div class="input-field-group">
+                            <label class="field-label">Category</label>
+                            <select id="filter-category-select" class="auth-input auth-select">
+                                <option value="">All Categories</option>
+                                <option value="Sadhus">Sadhus</option>
+                                <option value="Swamijis">Swamijis</option>
+                                <option value="Peethadhipathis">Peethadhipathis</option>
+                                <option value="Friends">Friends</option>
+                                <option value="Professionals">Professionals</option>
+                                <option value="Job Holders">Job Holders</option>
+                                <option value="Skilled Women">Skilled Women</option>
+                                <option value="Skilled Men">Skilled Men</option>
+                                <option value="Devotee Sevaks">Devotee Sevaks</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">State</label>
+                            <select id="filter-state-select" class="auth-input auth-select">
+                                <option value="">All States</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">District</label>
+                            <select id="filter-district-select" class="auth-input auth-select">
+                                <option value="">All Districts</option>
+                            </select>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">City / Town</label>
+                            <select id="filter-city-select" class="auth-input auth-select">
+                                <option value="">All Cities/Towns</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Results List -->
                     <div id="search-results-list" class="search-results-container">
                         <!-- Search results rendered dynamically -->
                     </div>

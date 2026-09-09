@@ -11,7 +11,7 @@ JanMitra is a private personal web application created for MyFriend (a Rishi/Swa
 JanMitra is strictly a private personal space:
 - **Private Access Control**: Unauthenticated visitors encounter a private authentication screen. Application views, databases, and person records are completely protected and inaccessible without valid authentication.
 - **Firebase Authentication**: Integrated with email/password authentication mapped securely under username `janmitra` with authorized password-reset recovery.
-- **Protected Firestore Security Rules**: Enforces `request.auth != null` across all data collections. Private person records are never exposed publicly or embedded statically.
+- **Single-User Firestore Security Policy**: Deployed security rules restrict read and write access on `/persons/{personId}` strictly to the single authorized JanMitra account (`request.auth.uid == "GHsl8zYWUYM9Ebo9kOUHxAEZIBn1"`). All other reads and writes are blocked.
 
 ---
 
@@ -24,20 +24,26 @@ The landing and authentication experience features an atmospheric visual environ
 
 ---
 
-## 👤 Person-Centric Data Model
+## 👤 Person-Centric Data Model & Multi-Category System
 
 JanMitra prioritizes **Person** as the core entity:
-- **Person Origin Focus**: State, District, and City/Town fields record the person's own home/origin rather than the transient meeting location.
-- **Rich Context**: Preserves names, contacts, photographs, meeting dates, categories, and the spiritual/personal significance of each encounter.
+- **Person Origin Focus**: State, District, and City/Town fields record the person's own home/origin association rather than transient meeting locations.
+- **Multi-Category Assignment**: A single person record supports multiple categories simultaneously (e.g. `["Friends", "Professionals"]`) selected from official categories (*Sadhus*, *Swamijis*, *Peethadhipathis*, *Friends*, *Professionals*, *Job Holders*, *Skilled Women*, *Skilled Men*, *Devotee Sevaks*).
+- **Structured Search & Filtering**: Includes text search combined with structured Category, State, District, and City/Town filters.
 
 ---
 
 ## 🚀 Development Status
 
 - **Phase 1**: Initial domain setup and responsive preview page.
-- **Phase 2 (Current)**:
-  - Private Firebase Authentication system with `janmitra` username mapping.
-  - Password recovery reset flow targeting authorized recovery address.
-  - Divine Lord Shiva animated canvas background.
-  - Protected Dashboard with **ADD PERSON** and **FIND PEOPLE** actions.
-  - Mobile & desktop responsive layout.
+- **Phase 2**: Private Firebase Authentication system with `janmitra` username mapping and Lord Shiva divine background.
+- **Phase 3**:
+  - Connected to production Firebase project (`janmitra-598fe`).
+  - Firebase Email/Password authentication system.
+  - Production Firestore person records collection (`/persons`).
+  - Single-user Firestore security rules (`request.auth.uid == "GHsl8zYWUYM9Ebo9kOUHxAEZIBn1"`).
+  - Production data mode with zero demo/sample records.
+- **Phase 3.1**:
+  - Multi-select category selection support per person record.
+  - Person-centric terminology refinement (e.g., *Date of Documentation / First Contact*, *Context & Significance*).
+  - Structured combined filters (Category, State, District, City/Town) in Find People interface.

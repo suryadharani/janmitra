@@ -54,7 +54,13 @@ export class JanMitraApp {
         this.addPersonModal = document.getElementById('add-person-modal');
         this.findPeopleModal = document.getElementById('find-people-modal');
         this.addPersonForm = document.getElementById('add-person-form');
+
+        // Find People Filter Elements
         this.searchInput = document.getElementById('search-person-input');
+        this.filterCategorySelect = document.getElementById('filter-category-select');
+        this.filterStateSelect = document.getElementById('filter-state-select');
+        this.filterDistrictSelect = document.getElementById('filter-district-select');
+        this.filterCitySelect = document.getElementById('filter-city-select');
     }
 
     initListeners() {
@@ -116,12 +122,14 @@ export class JanMitraApp {
             });
         }
 
-        // Search Input Filtering
-        if (this.searchInput) {
-            this.searchInput.addEventListener('input', (e) => {
-                this.filterFindPeopleList(e.target.value);
-            });
-        }
+        // Search & Structured Filter Listeners
+        const applyFilters = () => this.applyStructuredFilters();
+
+        if (this.searchInput) this.searchInput.addEventListener('input', applyFilters);
+        if (this.filterCategorySelect) this.filterCategorySelect.addEventListener('change', applyFilters);
+        if (this.filterStateSelect) this.filterStateSelect.addEventListener('change', applyFilters);
+        if (this.filterDistrictSelect) this.filterDistrictSelect.addEventListener('change', applyFilters);
+        if (this.filterCitySelect) this.filterCitySelect.addEventListener('change', applyFilters);
 
         // Modal Close Buttons
         document.querySelectorAll('.modal-close-trigger').forEach(btn => {
@@ -160,7 +168,6 @@ export class JanMitraApp {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // Firebase Auth listener (onAuthStateChanged) switches view on success
         } catch (err) {
             this.setLoading(false);
             console.error("Authentication Error:", err);
@@ -288,7 +295,8 @@ export class JanMitraApp {
     openFindPeopleModal() {
         if (this.findPeopleModal) {
             this.findPeopleModal.classList.add('active');
-            if (this.searchInput) this.searchInput.value = '';
+            this.populateLocationFilterDropdowns();
+            this.resetFilters();
             this.renderFindPeopleList(this.records);
         }
     }
@@ -310,9 +318,9 @@ export class JanMitraApp {
             });
 
             this.renderRecordsList(this.records);
+            this.populateLocationFilterDropdowns();
         } catch (err) {
             console.error("Error fetching persons from Firestore:", err);
-            // If empty or initial state
             this.renderRecordsList([]);
         }
     }
@@ -324,8 +332,10 @@ export class JanMitraApp {
         const state = document.getElementById('person-state-input')?.value.trim() || '';
         const district = document.getElementById('person-district-input')?.value.trim() || '';
         const city = document.getElementById('person-city-input')?.value.trim() || '';
-        const categorySelect = document.getElementById('person-category-input');
-        const category = categorySelect ? categorySelect.value : '';
+        
+        // Multi-select Categories
+        const checkedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+
         const context = document.getElementById('person-context-input')?.value.trim() || '';
         const notes = document.getElementById('person-notes-input')?.value.trim() || '';
 
@@ -339,7 +349,7 @@ export class JanMitraApp {
             state,
             district,
             city,
-            categories: category ? [category] : [],
+            categories: checkedCategories, // Array of selected categories
             context,
             notes,
             createdAt: serverTimestamp()
@@ -351,7 +361,10 @@ export class JanMitraApp {
         try {
             await addDoc(collection(db, 'persons'), personData);
             if (this.addPersonModal) this.addPersonModal.classList.remove('active');
-            if (this.addPersonForm) this.addPersonForm.reset();
+            if (this.addPersonForm) {
+                this.addPersonForm.reset();
+                document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
+            }
             await this.fetchPersonRecords();
         } catch (err) {
             console.error("Error saving person record to Firestore:", err);
@@ -383,7 +396,7 @@ export class JanMitraApp {
                 </div>
                 <div class="person-details">
                     <h4 class="person-name">${this.escapeHTML(person.name)}</h4>
-                    ${(person.city || person.state) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
+                    ${(person.city || person.state || person.district) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
                     ${person.context ? `<p class="person-context">"${this.escapeHTML(person.context)}"</p>` : ''}
                     ${(person.categories && person.categories.length > 0) ? `
                         <div class="person-tags">
@@ -395,20 +408,83 @@ export class JanMitraApp {
         `).join('');
     }
 
-    filterFindPeopleList(searchTerm) {
-        const term = (searchTerm || '').trim().toLowerCase();
-        if (!term) {
-            this.renderFindPeopleList(this.records);
-            return;
+    // Dynamic Filter Population
+    populateLocationFilterDropdowns() {
+        if (!this.records) return;
+
+        const states = Array.from(new Set(this.records.map(r => r.state).filter(Boolean))).sort();
+        const districts = Array.from(new Set(this.records.map(r => r.district).filter(Boolean))).sort();
+        const cities = Array.from(new Set(this.records.map(r => r.city).filter(Boolean))).sort();
+
+        if (this.filterStateSelect) {
+            const current = this.filterStateSelect.value;
+            this.filterStateSelect.innerHTML = `<option value="">All States</option>` + 
+                states.map(s => `<option value="${this.escapeHTML(s)}">${this.escapeHTML(s)}</option>`).join('');
+            this.filterStateSelect.value = current;
         }
 
+        if (this.filterDistrictSelect) {
+            const current = this.filterDistrictSelect.value;
+            this.filterDistrictSelect.innerHTML = `<option value="">All Districts</option>` + 
+                districts.map(d => `<option value="${this.escapeHTML(d)}">${this.escapeHTML(d)}</option>`).join('');
+            this.filterDistrictSelect.value = current;
+        }
+
+        if (this.filterCitySelect) {
+            const current = this.filterCitySelect.value;
+            this.filterCitySelect.innerHTML = `<option value="">All Cities/Towns</option>` + 
+                cities.map(c => `<option value="${this.escapeHTML(c)}">${this.escapeHTML(c)}</option>`).join('');
+            this.filterCitySelect.value = current;
+        }
+    }
+
+    resetFilters() {
+        if (this.searchInput) this.searchInput.value = '';
+        if (this.filterCategorySelect) this.filterCategorySelect.value = '';
+        if (this.filterStateSelect) this.filterStateSelect.value = '';
+        if (this.filterDistrictSelect) this.filterDistrictSelect.value = '';
+        if (this.filterCitySelect) this.filterCitySelect.value = '';
+    }
+
+    // Structured Combined Filter Logic (AND operations)
+    applyStructuredFilters() {
+        const searchTerm = (this.searchInput?.value || '').trim().toLowerCase();
+        const categoryVal = this.filterCategorySelect?.value || '';
+        const stateVal = this.filterStateSelect?.value || '';
+        const districtVal = this.filterDistrictSelect?.value || '';
+        const cityVal = this.filterCitySelect?.value || '';
+
         const filtered = this.records.filter(p => {
-            const nameMatch = (p.name || '').toLowerCase().includes(term);
-            const cityMatch = (p.city || '').toLowerCase().includes(term);
-            const districtMatch = (p.district || '').toLowerCase().includes(term);
-            const stateMatch = (p.state || '').toLowerCase().includes(term);
-            const catMatch = (p.categories || []).some(c => c.toLowerCase().includes(term));
-            return nameMatch || cityMatch || districtMatch || stateMatch || catMatch;
+            // Name / Context search
+            if (searchTerm) {
+                const nameMatch = (p.name || '').toLowerCase().includes(searchTerm);
+                const contextMatch = (p.context || '').toLowerCase().includes(searchTerm);
+                const notesMatch = (p.notes || '').toLowerCase().includes(searchTerm);
+                if (!nameMatch && !contextMatch && !notesMatch) return false;
+            }
+
+            // Category filter
+            if (categoryVal) {
+                const hasCategory = (p.categories || []).includes(categoryVal);
+                if (!hasCategory) return false;
+            }
+
+            // State filter
+            if (stateVal && p.state !== stateVal) {
+                return false;
+            }
+
+            // District filter
+            if (districtVal && p.district !== districtVal) {
+                return false;
+            }
+
+            // City filter
+            if (cityVal && p.city !== cityVal) {
+                return false;
+            }
+
+            return true;
         });
 
         this.renderFindPeopleList(filtered);
@@ -419,7 +495,7 @@ export class JanMitraApp {
         if (!listContainer) return;
 
         if (!recordsList || recordsList.length === 0) {
-            listContainer.innerHTML = `<p class="no-search-results">No matching records found.</p>`;
+            listContainer.innerHTML = `<p class="no-search-results">No matching person records found.</p>`;
             return;
         }
 
@@ -427,9 +503,14 @@ export class JanMitraApp {
             <div class="search-result-item">
                 <div class="result-header">
                     <strong>${this.escapeHTML(person.name)}</strong>
-                    <span class="result-location">${this.escapeHTML(person.city || '')} ${person.state ? '(' + this.escapeHTML(person.state) + ')' : ''}</span>
+                    <span class="result-location">${this.escapeHTML(person.city || '')}${person.state ? ' (' + this.escapeHTML(person.state) + ')' : ''}</span>
                 </div>
-                ${person.context ? `<p class="result-meta">${this.escapeHTML(person.context)}</p>` : ''}
+                ${(person.categories && person.categories.length > 0) ? `
+                    <div class="person-tags" style="margin-top: 4px;">
+                        ${person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('')}
+                    </div>
+                ` : ''}
+                ${person.context ? `<p class="result-meta" style="margin-top: 6px;">"${this.escapeHTML(person.context)}"</p>` : ''}
             </div>
         `).join('');
     }
