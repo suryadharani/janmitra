@@ -175,46 +175,62 @@
                     <div class="form-grid-2">
                         <div class="input-field-group">
                             <label class="field-label">Full Name</label>
-                            <input type="text" class="auth-input" placeholder="e.g. Sri Ananda Sharma" required>
+                            <input type="text" id="person-name-input" class="auth-input" placeholder="e.g. Sri Ananda Sharma" required>
                         </div>
 
                         <div class="input-field-group">
                             <label class="field-label">Contact Details</label>
-                            <input type="text" class="auth-input" placeholder="Phone or email">
+                            <input type="text" id="person-contact-input" class="auth-input" placeholder="Phone or email">
                         </div>
 
                         <div class="input-field-group">
                             <label class="field-label">Meeting Date</label>
-                            <input type="date" class="auth-input">
+                            <input type="date" id="person-date-input" class="auth-input">
                         </div>
 
                         <div class="input-field-group">
-                            <label class="field-label">Category Tags</label>
-                            <input type="text" class="auth-input" placeholder="e.g. Devotee, Scholar, Yogi">
+                            <label class="field-label">Category</label>
+                            <select id="person-category-input" class="auth-input auth-select">
+                                <option value="">Select Category...</option>
+                                <option value="Sadhus">Sadhus</option>
+                                <option value="Swamijis">Swamijis</option>
+                                <option value="Peethadhipathis">Peethadhipathis</option>
+                                <option value="Friends">Friends</option>
+                                <option value="Professionals">Professionals</option>
+                                <option value="Job Holders">Job Holders</option>
+                                <option value="Skilled Women">Skilled Women</option>
+                                <option value="Skilled Men">Skilled Men</option>
+                                <option value="Devotee Sevaks">Devotee Sevaks</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="location-group-box">
-                        <h5 class="box-label">Person's Origin / Association Location</h5>
+                        <h5 class="box-label">Person's Origin / Home Location</h5>
                         <div class="form-grid-3">
                             <div class="input-field-group">
                                 <label class="field-label">State</label>
-                                <input type="text" class="auth-input" placeholder="e.g. Andhra Pradesh">
+                                <input type="text" id="person-state-input" class="auth-input" placeholder="e.g. Andhra Pradesh">
                             </div>
                             <div class="input-field-group">
                                 <label class="field-label">District</label>
-                                <input type="text" class="auth-input" placeholder="e.g. Guntur">
+                                <input type="text" id="person-district-input" class="auth-input" placeholder="e.g. Guntur">
                             </div>
                             <div class="input-field-group">
                                 <label class="field-label">City / Town</label>
-                                <input type="text" class="auth-input" placeholder="e.g. Tenali">
+                                <input type="text" id="person-city-input" class="auth-input" placeholder="e.g. Tenali">
                             </div>
                         </div>
                     </div>
 
                     <div class="input-field-group">
                         <label class="field-label">Context & Significance of Meeting</label>
-                        <textarea class="auth-input auth-textarea" rows="3" placeholder="Context of how you met..."></textarea>
+                        <textarea id="person-context-input" class="auth-input auth-textarea" rows="2" placeholder="Context of meeting..."></textarea>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="field-label">Additional Notes</label>
+                        <textarea id="person-notes-input" class="auth-input auth-textarea" rows="2" placeholder="Additional notes..."></textarea>
                     </div>
 
                     <div class="modal-footer">
@@ -231,11 +247,11 @@
                 <button type="button" class="modal-close-trigger" aria-label="Close">&times;</button>
                 <div class="modal-header">
                     <h3 class="modal-title">Find People</h3>
-                    <p class="modal-subtitle">Search by person's name, origin city, or category.</p>
+                    <p class="modal-subtitle">Search by person's name, origin city, state, or category.</p>
                 </div>
                 <div class="modal-body">
                     <div class="input-field-group">
-                        <input type="search" id="search-person-input" class="auth-input" placeholder="🔍 Type name or city (e.g. Tenali)...">
+                        <input type="search" id="search-person-input" class="auth-input" placeholder="🔍 Type name, origin city, or category...">
                     </div>
                     <div id="search-results-list" class="search-results-container">
                         <!-- Search results rendered dynamically -->

@@ -147,7 +147,7 @@ html, body {
 .auth-input {
     width: 100%;
     padding: 14px 16px;
-    font-size: 1rem; // Prevents iOS mobile auto-zoom
+    font-size: 1rem;
     font-family: var(--font-body);
     color: var(--text-main);
     background: rgba(255, 255, 255, 0.04);
@@ -155,6 +155,16 @@ html, body {
     border-radius: 12px;
     outline: none;
     transition: all 0.25s ease;
+}
+
+.auth-select {
+    cursor: pointer;
+    background-color: #0b1120;
+}
+
+.auth-select option {
+    background-color: #0b1120;
+    color: #f8fafc;
 }
 
 .auth-input:focus {
@@ -167,6 +177,38 @@ html, body {
     resize: vertical;
     min-height: 80px;
 }
+
+.empty-records-state {
+    padding: 36px 20px;
+    text-align: center;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.empty-icon {
+    font-size: 2rem;
+    margin-bottom: 4px;
+}
+
+.empty-title {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.empty-desc {
+    font-size: 0.875rem;
+    color: var(--text-sub);
+    max-width: 400px;
+    line-height: 1.5;
+}
+
 
 /* Error Banner */
 .auth-error-message {

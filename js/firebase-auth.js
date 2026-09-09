@@ -16,55 +16,18 @@ import {
     serverTimestamp 
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { firebaseConfig, USERNAME_MAP, DEFAULT_RECOVERY_EMAIL } from './firebase-config.js';
+import { firebaseConfig, USERNAME_MAP, DEFAULT_RECOVERY_EMAIL, CATEGORIES } from './firebase-config.js';
 
-// Initialize Firebase App securely
-let app, auth, db;
-let isConfigured = false;
+// Initialize Firebase Production Services
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-try {
-    if (firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("Placeholder")) {
-        app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        isConfigured = true;
-    }
-} catch (err) {
-    console.warn("JanMitra Firebase init note:", err);
-}
-
-// Global Auth Controller Class
+// Global Auth & Person Controller Class
 export class JanMitraApp {
     constructor() {
         this.currentUser = null;
-        this.samplePersons = [
-            {
-                id: 'demo-1',
-                name: 'Sri Ananda Sharma',
-                contact: '+91 98765 43210',
-                photograph: '',
-                date: '2026-03-15',
-                state: 'Andhra Pradesh',
-                district: 'Guntur',
-                city: 'Tenali',
-                categories: ['Vedic Scholar', 'Devotee Sevak'],
-                context: 'Met during the annual Mahashivratri Seva at Srisailam.',
-                notes: 'A deeply learned scholar in Krishna Yajurveda.'
-            },
-            {
-                id: 'demo-2',
-                name: 'Gurudev Ramnath Maharaj',
-                contact: 'ramnath.seva@email.org',
-                photograph: '',
-                date: '2026-06-21',
-                state: 'Uttarakhand',
-                district: 'Rishikesh',
-                city: 'Tapovan',
-                categories: ['Yogi', 'Spiritual Guide'],
-                context: 'Shared quiet dialogue at the banks of Ganga regarding Dhyana practices.',
-                notes: 'Resides at Tapovan Ashram.'
-            }
-        ];
+        this.records = []; // Production Firestore records array
 
         this.initUI();
         this.initListeners();
@@ -90,19 +53,19 @@ export class JanMitraApp {
         // Modal Views for Dashboard Actions
         this.addPersonModal = document.getElementById('add-person-modal');
         this.findPeopleModal = document.getElementById('find-people-modal');
+        this.addPersonForm = document.getElementById('add-person-form');
+        this.searchInput = document.getElementById('search-person-input');
     }
 
     initListeners() {
         // Firebase Auth State Persistence
-        if (isConfigured && auth) {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    this.onLoginSuccess(user);
-                } else {
-                    this.onLogoutSuccess();
-                }
-            });
-        }
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                this.onLoginSuccess(user);
+            } else {
+                this.onLogoutSuccess();
+            }
+        });
 
         // Login Form Submit
         if (this.loginForm) {
@@ -145,6 +108,21 @@ export class JanMitraApp {
             findPeopleBtn.addEventListener('click', () => this.openFindPeopleModal());
         }
 
+        // Add Person Form Submit
+        if (this.addPersonForm) {
+            this.addPersonForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleCreatePerson();
+            });
+        }
+
+        // Search Input Filtering
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', (e) => {
+                this.filterFindPeopleList(e.target.value);
+            });
+        }
+
         // Modal Close Buttons
         document.querySelectorAll('.modal-close-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -180,41 +158,27 @@ export class JanMitraApp {
 
         this.setLoading(true, 'Authenticating...');
 
-        if (isConfigured && auth) {
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                // Auth state listener handles UI switch
-            } catch (err) {
-                this.setLoading(false);
-                console.error("Login failed:", err);
-                if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-                    this.showError('Incorrect username or password. Please try again.');
-                } else if (err.code === 'auth/too-many-requests') {
-                    this.showError('Access temporarily blocked due to multiple attempts. Please try again later.');
-                } else {
-                    this.showError(`Authentication note: ${err.message || 'Unable to log in.'}`);
-                }
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // Firebase Auth listener (onAuthStateChanged) switches view on success
+        } catch (err) {
+            this.setLoading(false);
+            console.error("Authentication Error:", err);
+            if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                this.showError('Incorrect username or password. Please try again.');
+            } else if (err.code === 'auth/too-many-requests') {
+                this.showError('Access temporarily blocked due to multiple attempts. Please try again later.');
+            } else {
+                this.showError('Authentication failed. Please check your credentials.');
             }
-        } else {
-            // Local preview mode if Firebase API key is pending configuration
-            setTimeout(() => {
-                this.setLoading(false);
-                if (password.length >= 6) {
-                    this.onLoginSuccess({ email, uid: 'local-swamiji-demo' });
-                } else {
-                    this.showError('Password must be at least 6 characters.');
-                }
-            }, 800);
         }
     }
 
     async handleSignOut() {
-        if (isConfigured && auth) {
-            try {
-                await signOut(auth);
-            } catch (err) {
-                console.error("Sign out error:", err);
-            }
+        try {
+            await signOut(auth);
+        } catch (err) {
+            console.error("Sign out error:", err);
         }
         this.onLogoutSuccess();
     }
@@ -240,60 +204,48 @@ export class JanMitraApp {
             this.forgotStatus.innerHTML = `<span class="status-loading">Sending password reset email to authorized address...</span>`;
         }
 
-        if (isConfigured && auth) {
-            try {
-                await sendPasswordResetEmail(auth, targetEmail);
-                if (this.forgotStatus) {
-                    this.forgotStatus.innerHTML = `
-                        <div class="status-success">
-                            ✓ Password reset email successfully sent to <strong>${targetEmail}</strong>. 
-                            Please check your inbox.
-                        </div>
-                    `;
-                }
-            } catch (err) {
-                console.error("Reset email error:", err);
-                if (this.forgotStatus) {
-                    this.forgotStatus.innerHTML = `<div class="status-error">Error sending reset link: ${err.message}</div>`;
-                }
+        try {
+            await sendPasswordResetEmail(auth, targetEmail);
+            if (this.forgotStatus) {
+                this.forgotStatus.innerHTML = `
+                    <div class="status-success">
+                        ✓ Password reset email successfully sent to <strong>${targetEmail}</strong>. 
+                        Please check your inbox.
+                    </div>
+                `;
             }
-        } else {
-            setTimeout(() => {
-                if (this.forgotStatus) {
-                    this.forgotStatus.innerHTML = `
-                        <div class="status-success">
-                            ✓ [Preview Mode] Password reset trigger sent to <strong>${targetEmail}</strong>.
-                        </div>
-                    `;
-                }
-            }, 600);
+        } catch (err) {
+            console.error("Reset email error:", err);
+            if (this.forgotStatus) {
+                this.forgotStatus.innerHTML = `<div class="status-error">Error sending reset link: ${err.message}</div>`;
+            }
         }
     }
 
-    onLoginSuccess(user) {
+    async onLoginSuccess(user) {
         this.currentUser = user;
         this.setLoading(false);
 
-        // Hide Login Screen, Show Application Dashboard
+        // Hide Login Screen, Show Dashboard
         if (this.loginScreen) this.loginScreen.style.display = 'none';
         if (this.appDashboard) {
             this.appDashboard.style.display = 'flex';
             this.appDashboard.classList.add('fade-in');
         }
 
-        // Update User Indicator
         const userDisplay = document.getElementById('current-user-display');
         if (userDisplay) {
             userDisplay.textContent = 'janmitra';
         }
 
-        this.renderSampleRecords();
+        // Fetch real production records from Firestore /persons collection
+        await this.fetchPersonRecords();
     }
 
     onLogoutSuccess() {
         this.currentUser = null;
+        this.records = [];
 
-        // Hide Application Dashboard, Show Login Screen
         if (this.appDashboard) this.appDashboard.style.display = 'none';
         if (this.loginScreen) {
             this.loginScreen.style.display = 'flex';
@@ -336,44 +288,160 @@ export class JanMitraApp {
     openFindPeopleModal() {
         if (this.findPeopleModal) {
             this.findPeopleModal.classList.add('active');
-            this.renderFindPeopleList();
+            if (this.searchInput) this.searchInput.value = '';
+            this.renderFindPeopleList(this.records);
         }
     }
 
-    renderSampleRecords() {
+    // Firestore CRUD Operations
+    async fetchPersonRecords() {
         const container = document.getElementById('recent-records-container');
         if (!container) return;
 
-        container.innerHTML = this.samplePersons.map(person => `
+        container.innerHTML = `<div class="records-loading">Fetching records...</div>`;
+
+        try {
+            const q = query(collection(db, 'persons'), orderBy('createdAt', 'desc'));
+            const querySnapshot = await getDocs(q);
+
+            this.records = [];
+            querySnapshot.forEach((doc) => {
+                this.records.push({ id: doc.id, ...doc.data() });
+            });
+
+            this.renderRecordsList(this.records);
+        } catch (err) {
+            console.error("Error fetching persons from Firestore:", err);
+            // If empty or initial state
+            this.renderRecordsList([]);
+        }
+    }
+
+    async handleCreatePerson() {
+        const name = document.getElementById('person-name-input')?.value.trim();
+        const contact = document.getElementById('person-contact-input')?.value.trim() || '';
+        const date = document.getElementById('person-date-input')?.value || '';
+        const state = document.getElementById('person-state-input')?.value.trim() || '';
+        const district = document.getElementById('person-district-input')?.value.trim() || '';
+        const city = document.getElementById('person-city-input')?.value.trim() || '';
+        const categorySelect = document.getElementById('person-category-input');
+        const category = categorySelect ? categorySelect.value : '';
+        const context = document.getElementById('person-context-input')?.value.trim() || '';
+        const notes = document.getElementById('person-notes-input')?.value.trim() || '';
+
+        if (!name) return;
+
+        const personData = {
+            name,
+            contact,
+            photograph: '',
+            date,
+            state,
+            district,
+            city,
+            categories: category ? [category] : [],
+            context,
+            notes,
+            createdAt: serverTimestamp()
+        };
+
+        const submitBtn = this.addPersonForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            await addDoc(collection(db, 'persons'), personData);
+            if (this.addPersonModal) this.addPersonModal.classList.remove('active');
+            if (this.addPersonForm) this.addPersonForm.reset();
+            await this.fetchPersonRecords();
+        } catch (err) {
+            console.error("Error saving person record to Firestore:", err);
+            alert("Error saving record: " + (err.message || "Permission denied or network error."));
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    }
+
+    renderRecordsList(records) {
+        const container = document.getElementById('recent-records-container');
+        if (!container) return;
+
+        if (!records || records.length === 0) {
+            container.innerHTML = `
+                <div class="empty-records-state">
+                    <div class="empty-icon">🌱</div>
+                    <p class="empty-title">No Person Records Found</p>
+                    <p class="empty-desc">No individuals have been recorded yet. Click <strong>+ ADD PERSON</strong> above to preserve a new person record.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = records.map(person => `
             <div class="person-card">
                 <div class="person-avatar-placeholder">
-                    ${person.name.charAt(0)}
+                    ${(person.name || 'P').charAt(0).toUpperCase()}
                 </div>
                 <div class="person-details">
-                    <h4 class="person-name">${person.name}</h4>
-                    <p class="person-origin">📍 ${person.city}, ${person.district}, ${person.state}</p>
-                    <p class="person-context">"${person.context}"</p>
-                    <div class="person-tags">
-                        ${person.categories.map(c => `<span class="category-tag">${c}</span>`).join('')}
-                    </div>
+                    <h4 class="person-name">${this.escapeHTML(person.name)}</h4>
+                    ${(person.city || person.state) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
+                    ${person.context ? `<p class="person-context">"${this.escapeHTML(person.context)}"</p>` : ''}
+                    ${(person.categories && person.categories.length > 0) ? `
+                        <div class="person-tags">
+                            ${person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `).join('');
     }
 
-    renderFindPeopleList() {
+    filterFindPeopleList(searchTerm) {
+        const term = (searchTerm || '').trim().toLowerCase();
+        if (!term) {
+            this.renderFindPeopleList(this.records);
+            return;
+        }
+
+        const filtered = this.records.filter(p => {
+            const nameMatch = (p.name || '').toLowerCase().includes(term);
+            const cityMatch = (p.city || '').toLowerCase().includes(term);
+            const districtMatch = (p.district || '').toLowerCase().includes(term);
+            const stateMatch = (p.state || '').toLowerCase().includes(term);
+            const catMatch = (p.categories || []).some(c => c.toLowerCase().includes(term));
+            return nameMatch || cityMatch || districtMatch || stateMatch || catMatch;
+        });
+
+        this.renderFindPeopleList(filtered);
+    }
+
+    renderFindPeopleList(recordsList) {
         const listContainer = document.getElementById('search-results-list');
         if (!listContainer) return;
 
-        listContainer.innerHTML = this.samplePersons.map(person => `
+        if (!recordsList || recordsList.length === 0) {
+            listContainer.innerHTML = `<p class="no-search-results">No matching records found.</p>`;
+            return;
+        }
+
+        listContainer.innerHTML = recordsList.map(person => `
             <div class="search-result-item">
                 <div class="result-header">
-                    <strong>${person.name}</strong>
-                    <span class="result-location">${person.city}, ${person.state}</span>
+                    <strong>${this.escapeHTML(person.name)}</strong>
+                    <span class="result-location">${this.escapeHTML(person.city || '')} ${person.state ? '(' + this.escapeHTML(person.state) + ')' : ''}</span>
                 </div>
-                <p class="result-meta">${person.context}</p>
+                ${person.context ? `<p class="result-meta">${this.escapeHTML(person.context)}</p>` : ''}
             </div>
         `).join('');
+    }
+
+    escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 }
 
