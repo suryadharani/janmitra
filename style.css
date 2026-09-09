@@ -545,23 +545,32 @@ html, body {
     color: var(--text-sub);
 }
 
-/* Modals */
+/* Body Scroll Lock when Modal is Active */
+body.modal-open {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Modals System */
 .app-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     z-index: 100;
     background: rgba(3, 4, 9, 0.85);
     backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
+    overflow: hidden;
 }
 
 .app-modal.active {
@@ -573,18 +582,78 @@ html, body {
     position: relative;
     width: 100%;
     max-width: 440px;
-    padding: 32px 24px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    padding: 24px 20px;
     border-radius: 20px;
     background: var(--card-glass);
     border: 1px solid var(--card-border);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .modal-wide {
-    max-width: 620px;
+    max-width: 640px;
+}
+
+.modal-header {
+    flex-shrink: 0;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-body-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Custom scrollbar for modal body */
+.modal-body-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--emerald-primary);
+}
+
+.modal-footer {
+    flex-shrink: 0;
+    padding-top: 14px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .modal-close-trigger {
@@ -602,6 +671,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10;
 }
 
 .modal-close-trigger:hover {
@@ -739,9 +809,7 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-height: 340px;
-    overflow-y: auto;
-    padding-right: 4px;
+    margin-top: 6px;
 }
 
 .search-result-item {
@@ -1156,9 +1224,6 @@ html, body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
-    max-height: 380px;
-    overflow-y: auto;
-    padding-right: 4px;
 }
 
 .detail-item {

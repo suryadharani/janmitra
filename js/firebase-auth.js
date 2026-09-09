@@ -275,12 +275,24 @@ export class JanMitraApp {
             this.confirmDeleteBtn.addEventListener('click', () => this.executeDeletePerson());
         }
 
-        // Modal Close Triggers
-        document.querySelectorAll('.modal-close-trigger').forEach(btn => {
+        // Modal Close and Cancel Triggers
+        document.querySelectorAll('.modal-close-trigger, .modal-cancel-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.app-modal');
                 if (modal) {
-                    modal.classList.remove('active');
+                    this.closeModal(modal);
+                    if (modal === this.addPersonModal) {
+                        this.resetPersonForm();
+                    }
+                }
+            });
+        });
+
+        // Close Modal on Backdrop Click Outside Dialog Card
+        document.querySelectorAll('.app-modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModal(modal);
                     if (modal === this.addPersonModal) {
                         this.resetPersonForm();
                     }
@@ -294,6 +306,20 @@ export class JanMitraApp {
                 document.querySelectorAll('.card-dropdown-menu.active').forEach(m => m.classList.remove('active'));
             }
         });
+    }
+
+    openModal(modal) {
+        if (!modal) return;
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
+    }
+
+    closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('active');
+        if (!document.querySelector('.app-modal.active')) {
+            document.body.classList.remove('modal-open');
+        }
     }
 
     // Handle Image Selection and Client-Side Compression
@@ -488,14 +514,14 @@ export class JanMitraApp {
 
     showForgotModal() {
         if (this.forgotModal) {
-            this.forgotModal.classList.add('active');
+            this.openModal(this.forgotModal);
             if (this.forgotStatus) this.forgotStatus.textContent = '';
         }
     }
 
     hideForgotModal() {
         if (this.forgotModal) {
-            this.forgotModal.classList.remove('active');
+            this.closeModal(this.forgotModal);
         }
     }
 
@@ -594,7 +620,7 @@ export class JanMitraApp {
         this.editingPersonId = null;
         if (this.formModalTitle) this.formModalTitle.textContent = "Add Person";
         if (this.submitPersonBtn) this.submitPersonBtn.textContent = "Save Person Record";
-        if (this.addPersonModal) this.addPersonModal.classList.add('active');
+        if (this.addPersonModal) this.openModal(this.addPersonModal);
     }
 
     // Open Edit Person Modal
@@ -643,7 +669,7 @@ export class JanMitraApp {
             this.onFormStateChanged('');
         }
 
-        if (this.addPersonModal) this.addPersonModal.classList.add('active');
+        if (this.addPersonModal) this.openModal(this.addPersonModal);
     }
 
     resetPersonForm() {
@@ -712,17 +738,17 @@ export class JanMitraApp {
         const notesEl = document.getElementById('expanded-person-notes');
         if (notesEl) notesEl.textContent = person.notes || 'No notes recorded.';
 
-        if (this.expandedPersonModal) this.expandedPersonModal.classList.add('active');
+        if (this.expandedPersonModal) this.openModal(this.expandedPersonModal);
     }
 
     closeExpandedModal() {
         this.expandedPersonId = null;
-        if (this.expandedPersonModal) this.expandedPersonModal.classList.remove('active');
+        if (this.expandedPersonModal) this.closeModal(this.expandedPersonModal);
     }
 
     openFindPeopleModal() {
         if (this.findPeopleModal) {
-            this.findPeopleModal.classList.add('active');
+            this.openModal(this.findPeopleModal);
             this.resetFilters();
             this.renderFindPeopleList(this.records);
         }
@@ -794,7 +820,7 @@ export class JanMitraApp {
                 this.showToast('✓ New person record saved.');
             }
 
-            if (this.addPersonModal) this.addPersonModal.classList.remove('active');
+            if (this.addPersonModal) this.closeModal(this.addPersonModal);
             this.resetPersonForm();
             await this.fetchPersonRecords();
         } catch (err) {
@@ -809,14 +835,14 @@ export class JanMitraApp {
     confirmDeletePerson(personId) {
         this.deletingPersonId = personId;
         if (this.deleteConfirmModal) {
-            this.deleteConfirmModal.classList.add('active');
+            this.openModal(this.deleteConfirmModal);
         }
     }
 
     closeDeleteModal() {
         this.deletingPersonId = null;
         if (this.deleteConfirmModal) {
-            this.deleteConfirmModal.classList.remove('active');
+            this.closeModal(this.deleteConfirmModal);
         }
     }
 

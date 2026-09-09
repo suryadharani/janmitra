@@ -56,8 +56,9 @@ JanMitra prioritizes **Person** as the core entity:
 - **Phase 3**: Connected to production Firebase project (`janmitra-598fe`), single-user security policy, and production data mode.
 - **Phase 3.1**: Multi-category support, person-centric terminology, and structured filtering.
 - **Phase 3.2**: Integrated India LGD master geography (28 States, 8 UTs, 780+ Districts), cascading location selectors, person editing/deletion, and combined filters.
-- **Phase 3.3**:
-  - Built-in static city reference dataset (e.g., AP $\rightarrow$ NTR $\rightarrow$ Vijayawada) for instant suggestions on fresh databases.
-  - Person Photograph upload with client-side image compression and preview/replace/remove options.
-  - Expanded Person View modal displaying complete person details, photograph, and integrated actions.
+- **Phase 3.3.1**:
+  - Fixed Add/Edit modal vertical scrolling across Mobile, Tablet, Desktop, and Touch devices.
+  - Implemented decoupled flex architecture with fixed header, scrollable body (`overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain;`), and sticky action footer.
+  - Integrated dynamic viewport sizing (`100dvh`) and body scroll locking (`body.modal-open`).
+
 

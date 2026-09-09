@@ -175,107 +175,110 @@
                     <p class="modal-subtitle">Record a person's details and origin location.</p>
                 </div>
                 <form id="add-person-form" class="modal-form">
-                    
-                    <!-- Photograph Upload Field -->
-                    <div class="input-field-group span-full">
-                        <label class="field-label">Person Photograph</label>
-                        <div class="photo-upload-wrapper">
-                            <div id="person-photo-preview-box" class="photo-preview-box">
-                                <span id="photo-placeholder-text" class="preview-placeholder-text">No photo selected</span>
-                                <img id="person-photo-img" class="photo-img-element" style="display: none;" alt="Person preview">
-                            </div>
-                            <div class="photo-actions-box">
-                                <input type="file" id="person-photo-input" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
-                                <button type="button" id="select-photo-btn" class="btn-secondary-action">📷 Choose Photo</button>
-                                <button type="button" id="remove-photo-btn" class="btn-danger-link" style="display: none;">Remove Photo</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-grid-2">
-                        <div class="input-field-group">
-                            <label class="field-label">Full Name</label>
-                            <input type="text" id="person-name-input" class="auth-input" placeholder="e.g. Sri Ananda Sharma" required>
-                        </div>
-
-                        <div class="input-field-group">
-                            <label class="field-label">Contact Details</label>
-                            <input type="text" id="person-contact-input" class="auth-input" placeholder="Phone or email">
-                        </div>
-
-                        <div class="input-field-group">
-                            <label class="field-label">Date of Documentation / First Contact</label>
-                            <input type="date" id="person-date-input" class="auth-input">
-                        </div>
-
+                    <div class="modal-body-scroll">
+                        
+                        <!-- Photograph Upload Field -->
                         <div class="input-field-group span-full">
-                            <label class="field-label">Categories (Select one or multiple)</label>
-                            <div class="category-checkbox-grid">
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Sadhus"> Sadhus
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Swamijis"> Swamijis
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Peethadhipathis"> Peethadhipathis
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Friends"> Friends
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Professionals"> Professionals
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Job Holders"> Job Holders
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Skilled Women"> Skilled Women
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Skilled Men"> Skilled Men
-                                </label>
-                                <label class="category-pill-label">
-                                    <input type="checkbox" class="category-checkbox" value="Devotee Sevaks"> Devotee Sevaks
-                                </label>
+                            <label class="field-label">Person Photograph</label>
+                            <div class="photo-upload-wrapper">
+                                <div id="person-photo-preview-box" class="photo-preview-box">
+                                    <span id="photo-placeholder-text" class="preview-placeholder-text">No photo selected</span>
+                                    <img id="person-photo-img" class="photo-img-element" style="display: none;" alt="Person preview">
+                                </div>
+                                <div class="photo-actions-box">
+                                    <input type="file" id="person-photo-input" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+                                    <button type="button" id="select-photo-btn" class="btn-secondary-action">📷 Choose Photo</button>
+                                    <button type="button" id="remove-photo-btn" class="btn-danger-link" style="display: none;">Remove Photo</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="location-group-box">
-                        <h5 class="box-label">Person's Origin / Home Location</h5>
-                        <div class="form-grid-3">
+                        <div class="form-grid-2">
                             <div class="input-field-group">
-                                <label class="field-label">State / UT</label>
-                                <select id="person-state-input" class="auth-input auth-select">
-                                    <option value="">Select State/UT...</option>
-                                </select>
+                                <label class="field-label">Full Name</label>
+                                <input type="text" id="person-name-input" class="auth-input" placeholder="e.g. Sri Ananda Sharma" required>
                             </div>
+
                             <div class="input-field-group">
-                                <label class="field-label">District</label>
-                                <select id="person-district-input" class="auth-input auth-select" disabled>
-                                    <option value="">Select District...</option>
-                                </select>
+                                <label class="field-label">Contact Details</label>
+                                <input type="text" id="person-contact-input" class="auth-input" placeholder="Phone or email">
                             </div>
+
                             <div class="input-field-group">
-                                <label class="field-label">City / Town</label>
-                                <input type="text" id="person-city-input" class="auth-input" list="known-cities-list" disabled placeholder="Enter or select city/town...">
-                                <datalist id="known-cities-list"></datalist>
+                                <label class="field-label">Date of Documentation / First Contact</label>
+                                <input type="date" id="person-date-input" class="auth-input">
+                            </div>
+
+                            <div class="input-field-group span-full">
+                                <label class="field-label">Categories (Select one or multiple)</label>
+                                <div class="category-checkbox-grid">
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Sadhus"> Sadhus
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Swamijis"> Swamijis
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Peethadhipathis"> Peethadhipathis
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Friends"> Friends
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Professionals"> Professionals
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Job Holders"> Job Holders
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Skilled Women"> Skilled Women
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Skilled Men"> Skilled Men
+                                    </label>
+                                    <label class="category-pill-label">
+                                        <input type="checkbox" class="category-checkbox" value="Devotee Sevaks"> Devotee Sevaks
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="input-field-group">
-                        <label class="field-label">Context & Significance</label>
-                        <textarea id="person-context-input" class="auth-input auth-textarea" rows="2" placeholder="Context or significance..."></textarea>
-                    </div>
+                        <div class="location-group-box">
+                            <h5 class="box-label">Person's Origin / Home Location</h5>
+                            <div class="form-grid-3">
+                                <div class="input-field-group">
+                                    <label class="field-label">State / UT</label>
+                                    <select id="person-state-input" class="auth-input auth-select">
+                                        <option value="">Select State/UT...</option>
+                                    </select>
+                                </div>
+                                <div class="input-field-group">
+                                    <label class="field-label">District</label>
+                                    <select id="person-district-input" class="auth-input auth-select" disabled>
+                                        <option value="">Select District...</option>
+                                    </select>
+                                </div>
+                                <div class="input-field-group">
+                                    <label class="field-label">City / Town</label>
+                                    <input type="text" id="person-city-input" class="auth-input" list="known-cities-list" disabled placeholder="Enter or select city/town...">
+                                    <datalist id="known-cities-list"></datalist>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="input-field-group">
-                        <label class="field-label">Additional Notes</label>
-                        <textarea id="person-notes-input" class="auth-input auth-textarea" rows="2" placeholder="Additional notes..."></textarea>
+                        <div class="input-field-group">
+                            <label class="field-label">Context & Significance</label>
+                            <textarea id="person-context-input" class="auth-input auth-textarea" rows="2" placeholder="Context or significance..."></textarea>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="field-label">Additional Notes</label>
+                            <textarea id="person-notes-input" class="auth-input auth-textarea" rows="2" placeholder="Additional notes..."></textarea>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
+                        <button type="button" class="btn-sign-out modal-cancel-trigger">Cancel</button>
                         <button type="submit" id="save-person-submit-btn" class="btn-primary-divine">Save Person Record</button>
                     </div>
                 </form>
@@ -298,7 +301,7 @@
                         </div>
                     </div>
 
-                    <div class="expanded-body-grid">
+                    <div class="expanded-body-grid modal-body-scroll">
                         <div class="detail-item">
                             <span class="detail-label">Contact Details</span>
                             <span id="expanded-person-contact" class="detail-value">Not recorded</span>
@@ -342,7 +345,7 @@
                     <h3 class="modal-title">Find People</h3>
                     <p class="modal-subtitle">Filter recorded individuals by name, category, or origin location.</p>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body-scroll">
                     <!-- Text Search -->
                     <div class="input-field-group">
                         <input type="search" id="search-person-input" class="auth-input" placeholder="🔍 Search by name, context, or notes...">
@@ -424,7 +427,7 @@
                     </p>
                 </div>
                 <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button type="button" id="cancel-delete-btn" class="btn-sign-out">Cancel</button>
+                    <button type="button" id="cancel-delete-btn" class="btn-sign-out modal-cancel-trigger">Cancel</button>
                     <button type="button" id="confirm-delete-btn" class="btn-danger-confirm">Delete</button>
                 </div>
             </div>
