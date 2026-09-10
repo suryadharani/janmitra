@@ -105,6 +105,7 @@ export class JanMitraApp {
         this.findPeopleModal = document.getElementById('find-people-modal');
         this.expandedPersonModal = document.getElementById('expanded-person-modal');
         this.deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        this.imageViewerModal = document.getElementById('image-viewer-modal');
         this.addPersonForm = document.getElementById('add-person-form');
         this.formModalTitle = document.getElementById('person-form-modal-title');
         this.submitPersonBtn = document.getElementById('save-person-submit-btn');
@@ -306,6 +307,21 @@ export class JanMitraApp {
                 document.querySelectorAll('.card-dropdown-menu.active').forEach(m => m.classList.remove('active'));
             }
         });
+
+        // Global Keyboard Event Listener (Esc key)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                if (this.imageViewerModal && this.imageViewerModal.classList.contains('active')) {
+                    this.closeImageViewer();
+                    e.stopImmediatePropagation();
+                    return;
+                }
+                const activeModal = document.querySelector('.app-modal.active');
+                if (activeModal) {
+                    this.closeModal(activeModal);
+                }
+            }
+        });
     }
 
     openModal(modal) {
@@ -319,6 +335,24 @@ export class JanMitraApp {
         modal.classList.remove('active');
         if (!document.querySelector('.app-modal.active')) {
             document.body.classList.remove('modal-open');
+        }
+    }
+
+    openImageViewer(photoUrl, personName) {
+        if (!photoUrl) return;
+        const imgEl = document.getElementById('image-viewer-img');
+        if (imgEl) {
+            imgEl.src = photoUrl;
+            imgEl.alt = personName || 'Full-size photograph';
+        }
+        if (this.imageViewerModal) {
+            this.openModal(this.imageViewerModal);
+        }
+    }
+
+    closeImageViewer() {
+        if (this.imageViewerModal) {
+            this.closeModal(this.imageViewerModal);
         }
     }
 
@@ -720,9 +754,13 @@ export class JanMitraApp {
         const avatarBox = document.getElementById('expanded-avatar-box');
         if (avatarBox) {
             if (person.photograph) {
-                avatarBox.innerHTML = `<img src="${person.photograph}" class="expanded-photo-img" alt="${this.escapeHTML(person.name)}">`;
+                avatarBox.innerHTML = `<img src="${person.photograph}" class="expanded-photo-img photo-clickable" alt="${this.escapeHTML(person.name)}" title="Click to view full photograph">`;
+                avatarBox.style.cursor = 'pointer';
+                avatarBox.onclick = () => this.openImageViewer(person.photograph, person.name);
             } else {
                 avatarBox.innerHTML = `<div class="expanded-avatar-initial">${(person.name || 'P').charAt(0).toUpperCase()}</div>`;
+                avatarBox.style.cursor = 'default';
+                avatarBox.onclick = null;
             }
         }
 
