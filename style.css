@@ -1159,11 +1159,22 @@ body.modal-open {
 }
 
 /* Expanded Person View Modal */
+#expanded-person-modal .modal-glass-card {
+    height: calc(100vh - 32px);
+    height: calc(100dvh - 32px);
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
 .expanded-person-container {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
+    height: 100%;
     overflow: hidden;
     gap: 16px;
 }
@@ -1174,7 +1185,7 @@ body.modal-open {
     gap: 16px;
     padding-bottom: 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
+    flex: 0 0 auto;
 }
 
 .expanded-avatar-box {
@@ -1224,11 +1235,20 @@ body.modal-open {
     font-weight: 600;
 }
 
-.expanded-body-grid {
+.expanded-body-grid.modal-body-scroll {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 14px;
-    padding-bottom: 24px;
+    padding-bottom: 32px;
+    padding-right: 6px;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
 }
 
 .detail-item {
@@ -1272,7 +1292,7 @@ body.modal-open {
     padding-top: 14px;
     margin-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
+    flex: 0 0 auto;
 }
 
 /* Phase 3.3.2 Additions: Call Action Styling */
