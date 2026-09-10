@@ -681,16 +681,23 @@ export class JanMitraApp {
         this.editingPersonId = null;
     }
 
-    // Helper to extract and normalize phone number for tel: links
+    // Helper to extract and normalize phone number for tel: links with strict phone validation
     getTelHref(contactStr) {
         if (!contactStr) return null;
         const str = String(contactStr).trim();
         if (!str) return null;
 
+        // 1. Email check: if string contains '@', it is an email address, not a phone number
+        if (str.includes('@')) return null;
+
+        // 2. Alphabetic check: if string contains letters, it is not a pure phone number
+        if (/[a-zA-Z]/.test(str)) return null;
+
         const hasPlus = str.startsWith('+');
         const digitsOnly = str.replace(/\D/g, '');
 
-        if (digitsOnly.length < 5) {
+        // 3. Digit count check: Must have between 7 and 15 digits
+        if (digitsOnly.length < 7 || digitsOnly.length > 15) {
             return null;
         }
 
@@ -927,15 +934,6 @@ export class JanMitraApp {
                                     <a href="${this.escapeHTML(telHref)}" class="btn-call-action" title="Call ${this.escapeHTML(person.name)}" onclick="event.stopPropagation();">📞 Call</a>
                                 ` : ''}
                             </div>
-                            
-                            <!-- Subtle Overflow Menu -->
-                            <div class="card-menu-container">
-                                <button type="button" class="card-menu-btn" aria-label="Options" onclick="window.janMitraApp.toggleCardMenu(event, '${person.id}')">⋮</button>
-                                <div id="menu-${person.id}" class="card-dropdown-menu">
-                                    <button type="button" class="dropdown-item" onclick="event.stopPropagation(); window.janMitraApp.openEditPersonModal('${person.id}')">✏️ Edit Person</button>
-                                    <button type="button" class="dropdown-item item-delete" onclick="event.stopPropagation(); window.janMitraApp.confirmDeletePerson('${person.id}')">🗑️ Delete Person</button>
-                                </div>
-                            </div>
                         </div>
 
                         ${(person.city || person.state || person.district) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
@@ -949,19 +947,6 @@ export class JanMitraApp {
                 </div>
             `;
         }).join('');
-    }
-
-    toggleCardMenu(event, personId) {
-        event.stopPropagation();
-        const menu = document.getElementById(`menu-${personId}`);
-        if (!menu) return;
-
-        const isCurrentlyActive = menu.classList.contains('active');
-        document.querySelectorAll('.card-dropdown-menu.active').forEach(m => m.classList.remove('active'));
-
-        if (!isCurrentlyActive) {
-            menu.classList.add('active');
-        }
     }
 
     resetFilters() {

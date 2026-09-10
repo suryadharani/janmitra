@@ -58,9 +58,11 @@ JanMitra prioritizes **Person** as the core entity:
 - **Phase 3.2**: Integrated India LGD master geography (28 States, 8 UTs, 780+ Districts), cascading location selectors, person editing/deletion, and combined filters.
 - **Phase 3.3.1**: Fixed Add/Edit modal vertical scrolling, dynamic viewport sizing (`100dvh`), and body scroll locking.
 - **Phase 3.3.2**:
+  - Enforced Core UX Rule: `Edit` and `Delete` actions are strictly restricted to Expanded Person View. Removed `⋮` overflow menu from collapsed cards.
   - Integrated `📞 Call` direct dial action (`tel:`) across Landing cards, Find People results, and Expanded Person View footer for records with valid phone numbers.
-  - Implemented client-side phone number normalization (`getTelHref()`) preserving leading `+` while sanitizing formatting characters and removing non-numeric strings safely.
+  - Implemented strict phone number validation (`getTelHref()`) rejecting emails (`@`), alphabetic text, and non-phone strings while preserving leading `+` and normalizing formatting.
   - Resolved Find People $\rightarrow$ Expanded View modal sequence: clicking a result closes Find People before opening Expanded View, preventing modal stacking while maintaining single-modal scroll lock.
+
 
 
 
