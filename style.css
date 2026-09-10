@@ -1162,15 +1162,19 @@ body.modal-open {
 .expanded-person-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    gap: 16px;
 }
 
 .expanded-header-box {
     display: flex;
     align-items: center;
-    gap: 20px;
-    padding-bottom: 16px;
+    gap: 16px;
+    padding-bottom: 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
 }
 
 .expanded-avatar-box {
@@ -1223,7 +1227,8 @@ body.modal-open {
 .expanded-body-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
+    gap: 14px;
+    padding-bottom: 24px;
 }
 
 .detail-item {
@@ -1264,8 +1269,10 @@ body.modal-open {
     justify-content: flex-end;
     align-items: center;
     flex-wrap: wrap;
-    padding-top: 12px;
+    padding-top: 14px;
+    margin-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
 }
 
 /* Phase 3.3.2 Additions: Call Action Styling */
