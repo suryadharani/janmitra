@@ -1262,9 +1262,50 @@ body.modal-open {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* Phase 3.3.2 Additions: Call Action Styling */
+.name-and-call-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-call-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #a7f3d0;
+    font-size: 0.8rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-call-action:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: var(--emerald-primary);
+    color: #ffffff;
+    box-shadow: 0 0 10px var(--emerald-glow);
+}
+
+.btn-call-divine {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff;
+    text-decoration: none;
+}
+
 
 
 

@@ -681,10 +681,31 @@ export class JanMitraApp {
         this.editingPersonId = null;
     }
 
+    // Helper to extract and normalize phone number for tel: links
+    getTelHref(contactStr) {
+        if (!contactStr) return null;
+        const str = String(contactStr).trim();
+        if (!str) return null;
+
+        const hasPlus = str.startsWith('+');
+        const digitsOnly = str.replace(/\D/g, '');
+
+        if (digitsOnly.length < 5) {
+            return null;
+        }
+
+        return `tel:${hasPlus ? '+' : ''}${digitsOnly}`;
+    }
+
     // Expanded Person View Modal
     openExpandedPersonModal(personId) {
         const person = this.records.find(r => r.id === personId);
         if (!person) return;
+
+        // Explicitly close Find People modal if currently open to prevent modal stacking
+        if (this.findPeopleModal && this.findPeopleModal.classList.contains('active')) {
+            this.closeModal(this.findPeopleModal);
+        }
 
         this.expandedPersonId = personId;
 
@@ -737,6 +758,19 @@ export class JanMitraApp {
 
         const notesEl = document.getElementById('expanded-person-notes');
         if (notesEl) notesEl.textContent = person.notes || 'No notes recorded.';
+
+        // Call Action Button in Expanded Footer
+        const expandedCallBtn = document.getElementById('expanded-call-btn');
+        if (expandedCallBtn) {
+            const telHref = this.getTelHref(person.contact);
+            if (telHref) {
+                expandedCallBtn.href = telHref;
+                expandedCallBtn.style.display = 'inline-flex';
+            } else {
+                expandedCallBtn.href = '#';
+                expandedCallBtn.style.display = 'none';
+            }
+        }
 
         if (this.expandedPersonModal) this.openModal(this.expandedPersonModal);
     }
@@ -875,38 +909,46 @@ export class JanMitraApp {
             return;
         }
 
-        container.innerHTML = records.map(person => `
-            <div class="person-card" data-id="${person.id}" onclick="window.janMitraApp.openExpandedPersonModal('${person.id}')">
-                <div class="person-avatar-placeholder">
-                    ${person.photograph 
-                        ? `<img src="${person.photograph}" class="card-thumb-img" alt="${this.escapeHTML(person.name)}">`
-                        : (person.name || 'P').charAt(0).toUpperCase()
-                    }
-                </div>
-                <div class="person-details">
-                    <div class="person-title-bar">
-                        <h4 class="person-name">${this.escapeHTML(person.name)}</h4>
-                        
-                        <!-- Subtle Overflow Menu -->
-                        <div class="card-menu-container">
-                            <button type="button" class="card-menu-btn" aria-label="Options" onclick="window.janMitraApp.toggleCardMenu(event, '${person.id}')">⋮</button>
-                            <div id="menu-${person.id}" class="card-dropdown-menu">
-                                <button type="button" class="dropdown-item" onclick="event.stopPropagation(); window.janMitraApp.openEditPersonModal('${person.id}')">✏️ Edit Person</button>
-                                <button type="button" class="dropdown-item item-delete" onclick="event.stopPropagation(); window.janMitraApp.confirmDeletePerson('${person.id}')">🗑️ Delete Person</button>
+        container.innerHTML = records.map(person => {
+            const telHref = this.getTelHref(person.contact);
+            return `
+                <div class="person-card" data-id="${person.id}" onclick="window.janMitraApp.openExpandedPersonModal('${person.id}')">
+                    <div class="person-avatar-placeholder">
+                        ${person.photograph 
+                            ? `<img src="${person.photograph}" class="card-thumb-img" alt="${this.escapeHTML(person.name)}">`
+                            : (person.name || 'P').charAt(0).toUpperCase()
+                        }
+                    </div>
+                    <div class="person-details">
+                        <div class="person-title-bar">
+                            <div class="name-and-call-group">
+                                <h4 class="person-name">${this.escapeHTML(person.name)}</h4>
+                                ${telHref ? `
+                                    <a href="${this.escapeHTML(telHref)}" class="btn-call-action" title="Call ${this.escapeHTML(person.name)}" onclick="event.stopPropagation();">📞 Call</a>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- Subtle Overflow Menu -->
+                            <div class="card-menu-container">
+                                <button type="button" class="card-menu-btn" aria-label="Options" onclick="window.janMitraApp.toggleCardMenu(event, '${person.id}')">⋮</button>
+                                <div id="menu-${person.id}" class="card-dropdown-menu">
+                                    <button type="button" class="dropdown-item" onclick="event.stopPropagation(); window.janMitraApp.openEditPersonModal('${person.id}')">✏️ Edit Person</button>
+                                    <button type="button" class="dropdown-item item-delete" onclick="event.stopPropagation(); window.janMitraApp.confirmDeletePerson('${person.id}')">🗑️ Delete Person</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    ${(person.city || person.state || person.district) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
-                    ${person.context ? `<p class="person-context">"${this.escapeHTML(person.context)}"</p>` : ''}
-                    ${(person.categories && person.categories.length > 0) ? `
-                        <div class="person-tags">
-                            ${person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('')}
-                        </div>
-                    ` : ''}
+                        ${(person.city || person.state || person.district) ? `<p class="person-origin">📍 ${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ', ' + this.escapeHTML(person.state) : ''}</p>` : ''}
+                        ${person.context ? `<p class="person-context">"${this.escapeHTML(person.context)}"</p>` : ''}
+                        ${(person.categories && person.categories.length > 0) ? `
+                            <div class="person-tags">
+                                ${person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     toggleCardMenu(event, personId) {
@@ -985,26 +1027,34 @@ export class JanMitraApp {
             return;
         }
 
-        listContainer.innerHTML = recordsList.map(person => `
-            <div class="search-result-item" onclick="window.janMitraApp.openExpandedPersonModal('${person.id}')">
-                <div class="result-header">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        ${person.photograph 
-                            ? `<img src="${person.photograph}" class="result-thumb-img" alt="${this.escapeHTML(person.name)}">`
-                            : ''
-                        }
-                        <strong>${this.escapeHTML(person.name)}</strong>
+        listContainer.innerHTML = recordsList.map(person => {
+            const telHref = this.getTelHref(person.contact);
+            return `
+                <div class="search-result-item" onclick="window.janMitraApp.openExpandedPersonModal('${person.id}')">
+                    <div class="result-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${person.photograph 
+                                ? `<img src="${person.photograph}" class="result-thumb-img" alt="${this.escapeHTML(person.name)}">`
+                                : ''
+                            }
+                            <strong>${this.escapeHTML(person.name)}</strong>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            ${telHref ? `
+                                <a href="${this.escapeHTML(telHref)}" class="btn-call-action" title="Call ${this.escapeHTML(person.name)}" onclick="event.stopPropagation();">📞 Call</a>
+                            ` : ''}
+                            <span class="result-location">${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ' (' + this.escapeHTML(person.state) + ')' : ''}</span>
+                        </div>
                     </div>
-                    <span class="result-location">${this.escapeHTML(person.city || '')}${person.district ? ', ' + this.escapeHTML(person.district) : ''}${person.state ? ' (' + this.escapeHTML(person.state) + ')' : ''}</span>
+                    ${(person.categories && person.categories.length > 0) ? `
+                        <div class="person-tags" style="margin-top: 4px;">
+                            ${person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${person.context ? `<p class="result-meta" style="margin-top: 6px;">"${this.escapeHTML(person.context)}"</p>` : ''}
                 </div>
-                ${(person.categories && person.categories.length > 0) ? `
-                    <div class="person-tags" style="margin-top: 4px;">
-                        ${person.categories.map(c => `<span class="category-tag">${this.escapeHTML(c)}</span>`).join('')}
-                    </div>
-                ` : ''}
-                ${person.context ? `<p class="result-meta" style="margin-top: 6px;">"${this.escapeHTML(person.context)}"</p>` : ''}
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     escapeHTML(str) {

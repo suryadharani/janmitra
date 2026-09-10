@@ -56,9 +56,11 @@ JanMitra prioritizes **Person** as the core entity:
 - **Phase 3**: Connected to production Firebase project (`janmitra-598fe`), single-user security policy, and production data mode.
 - **Phase 3.1**: Multi-category support, person-centric terminology, and structured filtering.
 - **Phase 3.2**: Integrated India LGD master geography (28 States, 8 UTs, 780+ Districts), cascading location selectors, person editing/deletion, and combined filters.
-- **Phase 3.3.1**:
-  - Fixed Add/Edit modal vertical scrolling across Mobile, Tablet, Desktop, and Touch devices.
-  - Implemented decoupled flex architecture with fixed header, scrollable body (`overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain;`), and sticky action footer.
-  - Integrated dynamic viewport sizing (`100dvh`) and body scroll locking (`body.modal-open`).
+- **Phase 3.3.1**: Fixed Add/Edit modal vertical scrolling, dynamic viewport sizing (`100dvh`), and body scroll locking.
+- **Phase 3.3.2**:
+  - Integrated `📞 Call` direct dial action (`tel:`) across Landing cards, Find People results, and Expanded Person View footer for records with valid phone numbers.
+  - Implemented client-side phone number normalization (`getTelHref()`) preserving leading `+` while sanitizing formatting characters and removing non-numeric strings safely.
+  - Resolved Find People $\rightarrow$ Expanded View modal sequence: clicking a result closes Find People before opening Expanded View, preventing modal stacking while maintaining single-modal scroll lock.
+
 
 
